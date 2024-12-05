@@ -1,0 +1,23 @@
+{
+  "name": "cmsc335final",
+  "version": "1.0.0",
+  "description": "Project for CMSC335. Website with an API and MongoDB",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CarHerrera/CMSC335Final"
+  },
+  "author": "Carlos Herrera",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.1",
+    "fs": "^0.0.1-security",
+    "mongodb": "^6.11.0"
+  }
+}
