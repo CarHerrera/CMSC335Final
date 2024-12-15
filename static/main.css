@@ -10,13 +10,37 @@ body{
     background-color: var(--red); 
     margin:0;
 }
-.header-container{
-    display:flex;
-    justify-content: space-between;
+
+/* NAV */
+
+
+.nav-container{
     background-color: var(--rose);
-    top: 45vh;
-    width: var(--width);
+    overflow: hidden;
+    width: 100%;
 }
+.nav-container a{
+    text-align: center;
+    float:right;
+    padding: 1.4rem;
+}
+
+.nav-container a:hover{
+    background-color: var(--green);
+    opacity: 0.5;
+}
+
+#split{
+    float:left;
+}
+
+
+
+/* ACCOUNTS */
+
+
+
+
 .login-container{
     width: var(--width);
     display:grid;
@@ -28,28 +52,20 @@ body{
     margin: 0;
     padding: 0;
 }
-nav{
-    display: flex;
-    margin:0;
-    padding:0;
-}
-.navbar{
-    float:left;
-    list-style-type: none;
-    padding: 0;
-}
-.nav-item{
-    display:inline;
-}
 .main-container{
     display:grid;
     justify-content: space-evenly;
-    background-color: red;
+    background-color: var(--rose);
     grid-template-rows: auto auto;
     grid-template-columns: auto auto;
+    width: var(--width);
+    margin-top: 3%;
 }
 .main-item{
-    background-color: white;
+    background-color: #49392C;
+    height: 40vh;
+    width: 45vw;
+    margin: 20px;
 }
 .item1{
     grid-column:1;
@@ -61,9 +77,43 @@ nav{
 }
 .item3{
     grid-row:2;
-    grid-column: 1 / span 2;
+    grid-column: 1 / -1;
+    width: auto;
+    display: flex;
+    flex-direction: column;
 }
+#recTable{
+    width:100%;
+    background-color: var(--green);
+}
+
+.recommended{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    width:100%;
+}
+
+#button-container{
+    margin-top: auto;
+    margin-bottom: 15px;
+    margin-left: 5px;
+}
+.genButton{
+    background-color:var(--blue);
+    color:white;
+    border-radius: 20px;
+    padding: 10px;
+    margin-bottom: 10px;
+    overflow:hidden;
+}
+
 /* GUEST */
+
+
+
+
 img{
     height: calc(97vh - (97vh - 100%));
     width: 100%;
@@ -85,7 +135,8 @@ img{
     color:white;
     border-radius: 20px;
     margin-left: 30vw;
-    height: 5vh;
+    height: 6vh;
     padding: 10px;
     overflow:hidden;
+    justify-content: left;
 }

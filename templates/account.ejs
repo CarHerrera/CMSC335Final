@@ -12,24 +12,25 @@
                 <h1>Login</h1>
                 <form method = 'post' action="login">
                     <fieldset>
-                        <label for="email">Email: </label>
-                        <input type="text">
+                        <label for="username">Username: </label>
+                        <input type="text" name="username">
                         <br>
                         <br>
 
                         <label for="pword">Password:</label>
-                        <input type="password"> 
+                        <input type="password" name="pword"> 
                     </fieldset>
                     <button type="submit">Log in</button>
                 </form>  
+                <p><%= error %></p>
             </div>
             <div class = 'login-right'>
                 <h1 style="text-align: center;">Sign Up</h1>
                 <form method = 'post' action="signup">
                     <fieldset>
                         <label for="name">Name: </label> <input name ='name' type="text" required>
-                        <label for="email">Email: </label>
-                        <input type="text" id ='email' name ='email' required>
+                        <label for="username">username: </label>
+                        <input type="text" id ='username' name ='username' required>
                         <br>
                         <br>
                         <label for="pword">Password:</label>

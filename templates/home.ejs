@@ -10,14 +10,39 @@
         <main>
             <% if (user != 'guest') {%>
                 <div class="main-container">
-                    <div class="main-item item1">1</div>
-                    <div class="main-item item2">2</div>
-                    <div class="main-item item3">3</div>
+                    <div class="main-item item1">
+                        <h1>Recent Meals and Drinks</h1>
+                    </div>
+                    <div class="main-item item2"><h1>Favorites</h1></div>
+                    <div class="main-item item3">
+                        <h1>A place to search for recommended meals</h1>
+
+                        <div class="recommended">
+                            <table id="recTable">
+                                <thead>
+                                    <tr>
+                                        <th style="padding-right:50vw;">Meal Name</th>
+                                        <th>Calories</th>
+                                        <th>Focus Macros</th>
+                                        <th>Nutrition Info</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                                <tfoot>
+
+                                </tfoot>
+                            </table>
+
+                        </div>
+                    <div id="button-container">
+                        <a class = 'genButton'>Generate Meals</a>
+                        <a class="genButton">Add extra filters</a>
+                    </div>
+                    </div>
                 </div>
             <% } else {%>
-                <div class="img-container">
-                    <!-- <img id='slides' src="images/Cutting board.jpg"> -->
-                </div>
                 
                 <div id="guestPop" style="color:black">
                     <h1 class="guestHeader">Please create an account to use this website to its fullest capabiltiies</h1>

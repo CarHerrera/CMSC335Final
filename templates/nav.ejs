@@ -1,22 +1,22 @@
-<div class="header-container">
-    <div class="header-left-container">
-        <% if (user == 'guest') {%>
-        <h2><a href="/"><%=user.name%> Recipe Hub! </a></h2>
-        <% } else {%>
-            <h2><a href="/">Recipe Hub</a></h2>
-        <% }%>
-    </div>
-    <div class="header-right-container">
-        <nav>
-            <ul class="navbar">
-                <li class="nav-item"> <a>Food Recipes</a> </li>
-                <li class="nav-item"> <a>Drinks</a> </li>
-                <% if (user == 'guest') {%>
-                    <li class="nav-item"> <a>Login/Singup</a> </li>
-                <% } else {%>
-                    <li class="nav-item"> <a>Profile</a> </li>
-                <% }%>
-            </ul>
-        </nav>
-    </div>
+
+<div class="nav-container">
+
+    <% if (user != 'guest') {%>
+        <a id="split" href="/"><%=user%> Recipe Hub! </a>
+    <% } else {%>
+        <a id="split" href="/">Recipe Hub</a>
+    <% }%>
+    
+    <% if (user == 'guest') {%>
+        <a class ='nav-item' href="account">Login/Singup</a>
+        <a class ='nav-item' >Drinks</a> 
+        <a class ='nav-item'>Food Recipes</a>
+    <% } else {%>
+        <a class ='nav-item' href="account">Login/Singup</a>
+        <a class ='nav-item'><%=user%>'s Profile</a>
+        <a class ='nav-item' href="drinkRecipes">Drinks</a> 
+        <a class ='nav-item' href="foodRecipes">Food Recipes</a>
+        
+    
+    <% }%>
 </div>
