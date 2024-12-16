@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Recipe Generator</title>
+        <link rel="stylesheet" type="text/css" href="/main.css">
+    </head>
+    <body>
+        <%- include('nav'); -%>
+        <% if (user != 'guest') {%>
+            <div class="profile-container">
+                <form autocomplete="off" action="/addItem" method="post">
+                    <div class="autocomplete" style="width:100%;">
+                      <input id="myInput" type="text" name="ingredient" placeholder="Corn">
+                    </div>
+                    <input type="submit">
+                  </form>
+            </div>
+        <%} else {%>
+                <%- include('error'); -%>
+        <%}%>
+        <script src="/autoComplete.js">
+        </script> 
+    </body>
+</html>

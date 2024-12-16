@@ -13,7 +13,9 @@ body{
 }
 
 /* NAV */
-
+a{
+    text-decoration: none;
+}
 
 .nav-container{
     background-color: var(--rose);
@@ -61,11 +63,17 @@ body{
     grid-template-columns: auto auto;
     margin-top: 3%;
 }
+.profile-container{
+    margin-top: 3%;
+    height: 80vh;
+    background-color: var(--rose);
+}
 .main-item{
     background-color: #49392C;
     height: 40vh;
     width: 45vw;
     margin: 20px;
+    overflow: scroll;
 }
 .drink-container{
     background-color: var(--rose);
@@ -161,13 +169,68 @@ table, th, td{
     width: 30%;
     height: 100%;
 }
+
+
+
+
+* { box-sizing: border-box; }
+body {
+  font: 16px Arial;
+}
+.autocomplete {
+  /*the container must be positioned relative:*/
+  position: relative;
+  display: inline-block;
+}
+input {
+  border: 1px solid transparent;
+  background-color: #f1f1f1;
+  padding: 10px;
+  font-size: 16px;
+}
+input[type=text] {
+  background-color: #f1f1f1;
+  width: 100%;
+}
+input[type=submit] {
+  background-color: DodgerBlue;
+  color: #fff;
+}
+.autocomplete-items {
+  position: absolute;
+  border: 1px solid #d4d4d4;
+  border-bottom: none;
+  border-top: none;
+  z-index: 99;
+  /*position the autocomplete items to be the same width as the container:*/
+  top: 100%;
+  left: 0;
+  right: 0;
+}
+.autocomplete-items div {
+  padding: 10px;
+  cursor: pointer;
+  background-color: #fff;
+  border-bottom: 1px solid #d4d4d4;
+}
+.autocomplete-items div:hover {
+  /*when hovering an item:*/
+  background-color: #e9e9e9;
+}
+.autocomplete-active {
+  /*when navigating through the items using the arrow keys:*/
+  background-color: DodgerBlue !important;
+  color: #ffffff;
+}
+
+
 /* GUEST */
 
 
 
 
 
-#guestPop{
+.guestPop{
     position:absolute;
     top: 25%;
     width: var(--width);

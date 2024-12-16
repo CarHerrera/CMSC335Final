@@ -67,6 +67,12 @@ app.get('/', (req,res) =>{
 })
 
 app.get('/account', (req,res) => {
+    if(req.session.user == null){
+        req.session.user = 'guest';
+        req.session.favorites = [];
+        req.session.drinkInventory = [];
+        req.session.save();
+    }
     res.render('account', {user:req.session.user, error:""});
 })
 
@@ -84,7 +90,9 @@ app.post('/login', async (req,res) => {
     if(r){
         req.session.user = r.user;
         req.session.favorites = r.drinkProfile.favorites;
+        req.session.drinkInventory = r.drinkProfile.inventory;
         req.session.save();
+        // console.log(req.session.favorites);
         res.render('home', {user: req.session.user})
     } else {
         res.render('account',{user:req.session.user, error:"Password/Username was not correct"});
@@ -110,9 +118,32 @@ app.post('/signup', async (req,res) => {
     res.render('home', {user: username, entries:""});
 })
 app.get('/foodRecipes', async (req,res) => {
+    if(req.session.user == null){
+        req.session.user = 'guest';
+        req.session.favorites = [];
+        req.session.drinkInventory = [];
+        req.session.save();
+        res.render('error', {user: req.session.user})
+    }
     res.send('Nice!');
 });
 app.get('/drinkRecipes',async (req,res) =>{
+    if(req.session.user == null){
+        req.session.user = 'guest';
+        req.session.favorites = [];
+        req.session.drinkInventory = [];
+        req.session.save();
+        res.render('error', {user: req.session.user})
+    }
+    let r;
+    try {
+        await client.connect();
+        r = await client.db(MONGO_DB_NAME).collection('users').findOne({_id: req.session.user});
+    } catch (e){
+        console.log(e)
+    } finally{
+        await client.close();
+    }
     let temp = "";
     let promiseList = [];
     req.session.favorites.forEach(r => {
@@ -129,19 +160,79 @@ app.get('/drinkRecipes',async (req,res) =>{
                 favs += "<tr>"
                 let drinks = drink.drinks[0];
                 favs += `<td>${drinks.strDrink}</td><td><a href="/drinks/${drinks.idDrink}">More Info</a></td>`;
+                COCK_CAT.add(drinks.strDrink);
                 favs += "</tr>";
             })
             let entries = "";
+            let inventory = "";
+            req.session.drinkInventory.forEach((ing) => {
+                inventory+=`<label class="drinkItem" for="${ing}">${ing}</label>
+                            <input type="checkbox" name="${ing}" class="remove">
+                            <br>`
+            })
             // results.forEach(i => console.log(i));
-            res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favs});
+            res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favs, inventory: inventory});
     })    
 });
-app.post('/remove', (req,res) =>{
+app.post('/remove', async (req,res) =>{
+    if(req.session.user == null){
+    req.session.user = 'guest';
+    req.session.favorites = [];        
+    req.session.drinkInventory = [];
+    req.session.save();
+    res.render('error', {user: req.session.user})
+    }
     let result = Object.setPrototypeOf(req.body, Object.prototype);
-    console.log(result);
-    res.send("Hello!");
+    try {
+        await client.connect();
+        let query = {_id: req.session.user}
+        let add = {$pull: {'drinkProfile.inventory': {$in: Object.keys(result)}}}
+        r = await client.db(MONGO_DB_NAME).collection('users').updateOne(query,add);
+        req.session.drinkInventory = req.session.drinkInventory.filter(r=> !Object.keys(result).includes(r));
+        console.log(`Application entry created with id ${r.id}`);
+    } catch (e){
+        console.log(e)
+    } finally{
+        await client.close();
+    }
+    let temp = "";
+    let promiseList = [];
+    req.session.favorites.forEach(r => {
+        promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
+    })
+    promiseList.push((fetch (`${COCKTAIL_DB}list.php?c=list`).then(t => t.json())));
+    Promise.all([...promiseList])
+        .then(results => {
+            let categories = results.pop().drinks;
+            let options = "";
+            categories.forEach(e => {options+=`<option value="${e.strCategory}">${e.strCategory}</option>`;})   
+            let favs = "";
+            results.forEach(drink => {
+                favs += "<tr>"
+                let drinks = drink.drinks[0];
+                favs += `<td>${drinks.strDrink}</td><td><a href="/drinks/${drinks.idDrink}">More Info</a></td>`;
+                COCK_CAT.add(drinks.strDrink);
+                favs += "</tr>";
+            })
+            let entries = "";
+            let inventory = "";
+            req.session.drinkInventory.forEach((ing) => {
+                inventory+=`<label class="drinkItem" for="${ing}">${ing}</label>
+                            <input type="checkbox" name="${ing}" class="remove">
+                            <br>`
+            })
+            // results.forEach(i => console.log(i));
+            res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favs, inventory: inventory});
+    })    
 })
 app.post('/processFilters', (req,res)=>{
+    if(req.session.user == null){
+        req.session.user = 'guest';
+        req.session.favorites = [];
+        req.session.drinkInventory = [];
+        req.session.save();
+        res.render('error', {user: req.session.user})
+    }
     let filter = "filter.php?c=";
     let promiseList = [];
     req.session.favorites.forEach(r => {
@@ -153,7 +244,6 @@ app.post('/processFilters', (req,res)=>{
     Promise.all([...promiseList]).then(
         results => {
             let categories = "";
-            let favs = req.session.favorites.length;
             let entries = "";
             let queryResults = results.pop().drinks;
             queryResults.forEach(r => {
@@ -166,15 +256,58 @@ app.post('/processFilters', (req,res)=>{
                 drink = r.drinks[0];
                 favorites +=  `<tr><td>${drink.strDrink}</td><td><a href="/drinks/${drink.idDrink}">More Info</a></td></tr>`;
             })
-            res.render('drinks', {user: req.session.user, entries:entries, categories:categories, favorites: favorites});
+            let inventory = "";
+            req.session.drinkInventory.forEach((ing) => {
+                inventory+=`<label class="drinkItem" for="${ing}">${ing}</label>
+                            <input type="checkbox" name="${ing}" class="remove">
+                            <br>`
+            })
+            res.render('drinks', {user: req.session.user, entries:entries, categories:categories, favorites: favorites, inventory:inventory});
         }
     )
 
 
 })
-
-app.get('/drinks/:id', (req,res) =>{
+app.post('/addItem', async (req,res) => {
+    let item = Object.setPrototypeOf(req.body, Object.prototype);
+    try {
+        await client.connect();
+        let query = {_id: req.session.user}
+        let add = {$push: {'drinkProfile.inventory': item.ingredient}}
+        r = await client.db(MONGO_DB_NAME).collection('users').updateOne(query,add);
+        req.session.drinkInventory.push(item.ingredient);
+        console.log(`Application entry created with id ${r.id}`);
+    } catch (e){
+        console.log(e)
+    } finally{
+        await client.close();
+    }
+    
+    res.render('profile', {user: req.session.user})
+})
+app.get('/error', (req,res)=>{
+    res.render('error', {user: req.session.user})
+})
+app.get('/drinks/:id', async (req,res) =>{
+    if(req.session.user == null){
+        req.session.user = 'guest';
+        req.session.favorites = [];
+        req.session.drinkInventory = [];
+        req.session.save();
+        res.render('error', {user: req.session.user})
+    }
     let id = req.params;
+    try {
+        await client.connect();
+        let query = {_id: req.session.user}
+        let recent = {$push: {'drinkProfile.recents': id.id}}
+        r = await client.db(MONGO_DB_NAME).collection('users').updateOne(query,recent);
+        console.log(`Application entry created with id ${r.id}`);
+    } catch (e){
+        console.log(e)
+    } finally{
+        await client.close();
+    }
     fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id.id}`)
     .then( r => {
             if (r.ok){
@@ -221,9 +354,27 @@ app.get('/drinks/:id', (req,res) =>{
         console.log(e);
     })
 })
-app.get('/addFavorite/:id', async (req,res) => {
+app.get('/profile/:id', (req,res) => {
+    if(req.session.user == null){
+        req.session.user = 'guest';
+        req.session.favorites = [];
+        req.session.drinkInventory = [];
+        req.session.save();
+        res.render('error', {user: req.session.user})
+    }
+    res.render('profile', {user: req.session.user})
+})
+app.get('/addFavoriteDrink/:id', async (req,res) => {
+    if(req.session.user == null){
+        req.session.user = 'guest';
+        req.session.favorites = [];
+        req.session.drinkInventory = [];
+        req.session.save();
+        res.render('error', {user: req.session.user})
+    }
     let {id} = req.params;
-    console.log(id);
+    // console.log(req.params);
+    req.session.favorites.push(id);
     try {
         await client.connect();
         let query = {_id: req.session.user}
@@ -234,12 +385,32 @@ app.get('/addFavorite/:id', async (req,res) => {
         console.log(e)
     } finally{
         await client.close();
-    }    
-    res.send("Hello!");
+    }
+    let promiseList = [];
+    req.session.favorites.forEach(r => {
+        promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
+    })
+    Promise.all([...promiseList]).then(data =>{
+        let favorites = ""
+        data.forEach(r => {
+            drink = r.drinks[0];
+            favorites +=  `<tr><td>${drink.strDrink}</td><td><a href="/drinks/${drink.idDrink}">More Info</a></td></tr>`;
+        })
+        let categories ="";
+        COCK_CAT.forEach(e => {categories+=`<option value="${e}">${e}</option>`;});
+        let inventory = "";
+        req.session.drinkInventory.forEach((ing) => {
+            inventory+=`<label class="drinkItem" for="${ing}">${ing}</label>
+                        <input type="checkbox" name="${ing}" class="remove">
+                        <br>`
+        })
+        res.render('drinks', {user:req.session.user, favorites: favorites, categories:categories, entries:""});
+    })
 })
 app.get('/logout', (req,res)=>{
     req.session.user='guest';
     req.session.favorites = [];
+    req.session.drinkInventory = [];
     req.session.save();
     res.render('home',{user: req.session.user});
 })
