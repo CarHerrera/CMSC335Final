@@ -4,6 +4,7 @@
     --green: #3DDC97;
     --blue: #457B9D;
     --red: #922D50;
+    --white: #FFF;
     --width: 100vmax;
 }
 body{
@@ -58,7 +59,6 @@ body{
     background-color: var(--rose);
     grid-template-rows: auto auto;
     grid-template-columns: auto auto;
-    width: var(--width);
     margin-top: 3%;
 }
 .main-item{
@@ -66,6 +66,14 @@ body{
     height: 40vh;
     width: 45vw;
     margin: 20px;
+}
+.drink-container{
+    background-color: var(--rose);
+    margin-top: 3%;
+}
+.content-container{
+    display:flex;
+    flex-direction: row;
 }
 .item1{
     grid-column:1;
@@ -81,6 +89,7 @@ body{
     width: auto;
     display: flex;
     flex-direction: column;
+    overflow:scroll;
 }
 #recTable{
     width:100%;
@@ -108,18 +117,56 @@ body{
     margin-bottom: 10px;
     overflow:hidden;
 }
+.favorite h1{
+    display:inline;
+}
+#favoriteButton{
+    margin-top:1rem;
+    margin-right: .5rem;
+    position:relative;
+    float:right;
+    text-decoration: none;
+    color: var(--black);
+}
+.drinkList{
+    list-style-type: none;
+    padding:0;
+    margin: 10px;
+}
+.drinkList li{
+    position:relative;
+}
+.remove, .right{
+    position: absolute;
+    right:4%;
+}
+.drinkItem:hover{
+    background-color: var(--white);
+}
+.remove:hover{
+    background-color: var(--red);
+}
 
+table, th, td{
+    border: 2px solid var(--black);
+    border-collapse: collapse;
+}
+.fa:hover{
+    color: orange;
+}
+.checked{
+    color:orange;
+}
+.drinkImage{
+    width: 30%;
+    height: 100%;
+}
 /* GUEST */
 
 
 
 
-img{
-    height: calc(97vh - (97vh - 100%));
-    width: 100%;
-    overflow:visible;
-    filter: blur(12px);
-}
+
 #guestPop{
     position:absolute;
     top: 25%;

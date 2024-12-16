@@ -8,14 +8,14 @@
     <% }%>
     
     <% if (user == 'guest') {%>
-        <a class ='nav-item' href="account">Login/Singup</a>
+        <a class ='nav-item' href="/account">Login/Singup</a>
         <a class ='nav-item' >Drinks</a> 
         <a class ='nav-item'>Food Recipes</a>
     <% } else {%>
-        <a class ='nav-item' href="account">Login/Singup</a>
+        <a class ='nav-item' href="/logout">Logout</a>
         <a class ='nav-item'><%=user%>'s Profile</a>
-        <a class ='nav-item' href="drinkRecipes">Drinks</a> 
-        <a class ='nav-item' href="foodRecipes">Food Recipes</a>
+        <a class ='nav-item' href="/drinkRecipes">Drinks</a> 
+        <a class ='nav-item' href="/foodRecipes">Food Recipes</a>
         
     
     <% }%>

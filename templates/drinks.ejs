@@ -4,15 +4,47 @@
         <meta charset="utf-8">
         <title>Drink Curator</title>
         <link rel="stylesheet" type="text/css" href="main.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     </head>
     <body>
         <%- include ('nav'); -%>
         <main class = 'main-container'>
             <div class ='main-item item1'>
                 <h1>Favorite Drinks</h1>
+                <div class="recommended">
+                    <table id="recTable">
+                        <thead>
+                            <tr>
+                                <th>Drink Name</th>
+                                <th>Recipe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <%- favorites %>
+                        </tbody>
+                        <tfoot>
+
+                        </tfoot>
+                    </table>
+
+                </div>
             </div>
             <div class ='main-item item2'>
                 <h1>Drink Inventory</h1>
+                <div class='inventory'>
+                    <form action="remove" method="post">
+                        <label class="drinkItem" for="item1">Test</label>
+                        <input type="checkbox" name="item1" class="remove">
+                        <br>
+                        <label class="drinkItem" for="item2">Test</label>
+                        <input type="checkbox" name="item2" class="remove">
+                        <br>
+                        <label class="drinkItem" for="item3">Test</label>
+                        <input type="checkbox" name="item3" class="remove">
+                        <br>
+                        <input type ='submit' value="Remove"> 
+                    </form>
+                </div>
             </div>
             <div class ='main-item item3'>
                 <h1>Drink Finder</h1>
@@ -27,13 +59,12 @@
                     
                     <input type="submit" value="submit">
                 </form>
+                <br>
                 <table id="recTable">
                     <thead>
                         <tr>
-                            <th style="padding-right:50vw;">Meal Name</th>
-                            <th>Calories</th>
-                            <th>Focus Macros</th>
-                            <th>Nutrition Info</th>
+                            <th style="padding-right:50vw;">Drink Name</th>
+                            <th>More Information</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -46,4 +77,5 @@
             </div>
         </main>
     </body>
+    <script type="text/javascript" src="favoriteToggle.js"></script>
 </html>
