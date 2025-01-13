@@ -13,7 +13,9 @@ const MONGO_DB_NAME = process.env.MONGO_DB_DB;
 const API_KEY_SPOON = process.env.API_KEY_SPOON;
 const COCKTAIL_DB = 'https://www.thecocktaildb.com/api/json/v1/1/';
 const COCK_CAT = new Set();
+const BASE_URL = '/recipeGenerator/';
 
+// FINAL TODO: ADd more filters for the search. Should be multi ingredient and inventory search. 
 
 const uri = `mongodb+srv://${MONGO_DB_USER}:${MONGO_DB_PW}@cluster0.ivirx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -57,7 +59,7 @@ app.use(
 );
 
 /* Site pages */
-app.get('/', (req,res) =>{
+app.get(BASE_URL, (req,res) =>{
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.save();
@@ -66,7 +68,7 @@ app.get('/', (req,res) =>{
     res.render('home',{user: req.session.user});
 })
 
-app.get('/account', (req,res) => {
+app.get(BASE_URL+'account', (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -76,7 +78,7 @@ app.get('/account', (req,res) => {
     res.render('account', {user:req.session.user, error:""});
 })
 
-app.post('/login', async (req,res) => {
+app.post(BASE_URL+'login', async (req,res) => {
     let {username, pword} = req.body;
     let r;
     try {
@@ -98,7 +100,7 @@ app.post('/login', async (req,res) => {
         res.render('account',{user:req.session.user, error:"Password/Username was not correct"});
     }
 })
-app.post('/signup', async (req,res) => {
+app.post(BASE_URL+'signup', async (req,res) => {
     let {username, pword, age, allergies} = req.body;
     let app = {_id:username, user: username, pword:pword, age:age, allergies: allergies, 
         drinkProfile:{ favorites:[], recents:[], inventory:[]}, 
@@ -117,7 +119,8 @@ app.post('/signup', async (req,res) => {
     
     res.render('home', {user: username, entries:""});
 })
-app.get('/foodRecipes', async (req,res) => {
+
+app.get(BASE_URL+'foodRecipes', async (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -125,9 +128,25 @@ app.get('/foodRecipes', async (req,res) => {
         req.session.save();
         res.render('error', {user: req.session.user})
     }
-    res.send('Nice!');
+    res.render('food', {user: req.session.user, entries:"", categories:"", favorites: "", inventory: ""});
 });
-app.get('/drinkRecipes',async (req,res) =>{
+app.post(BASE_URL+'processMealFilter', (req,res) =>{
+    if(req.session.user == null){
+        req.session.user = 'guest';
+        req.session.favorites = [];
+        req.session.drinkInventory = [];
+        req.session.save();
+        res.render('error', {user: req.session.user})
+    }
+    fetch(`https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY_SPOON}&`).then(
+        r => {
+            r.json();
+        }).then(r =>{
+            console.log(r);
+        })
+    
+})
+app.get(BASE_URL+'drinkRecipes',async (req,res) =>{
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -174,7 +193,7 @@ app.get('/drinkRecipes',async (req,res) =>{
             res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favs, inventory: inventory});
     })    
 });
-app.post('/remove', async (req,res) =>{
+app.post(BASE_URL+'remove', async (req,res) =>{
     if(req.session.user == null){
     req.session.user = 'guest';
     req.session.favorites = [];        
@@ -225,7 +244,7 @@ app.post('/remove', async (req,res) =>{
             res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favs, inventory: inventory});
     })    
 })
-app.post('/processFilters', (req,res)=>{
+app.post(BASE_URL+'processFilters', (req,res)=>{
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -268,7 +287,7 @@ app.post('/processFilters', (req,res)=>{
 
 
 })
-app.post('/addItem', async (req,res) => {
+app.post(BASE_URL+'addItem', async (req,res) => {
     let item = Object.setPrototypeOf(req.body, Object.prototype);
     try {
         await client.connect();
@@ -285,10 +304,10 @@ app.post('/addItem', async (req,res) => {
     
     res.render('profile', {user: req.session.user})
 })
-app.get('/error', (req,res)=>{
+app.get(BASE_URL+'error', (req,res)=>{
     res.render('error', {user: req.session.user})
 })
-app.get('/drinks/:id', async (req,res) =>{
+app.get(BASE_URL+'drinks/:id', async (req,res) =>{
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -354,7 +373,7 @@ app.get('/drinks/:id', async (req,res) =>{
         console.log(e);
     })
 })
-app.get('/profile/:id', (req,res) => {
+app.get(BASE_URL+'profile/:id', (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -364,7 +383,7 @@ app.get('/profile/:id', (req,res) => {
     }
     res.render('profile', {user: req.session.user})
 })
-app.get('/addFavoriteDrink/:id', async (req,res) => {
+app.get(BASE_URL+'addFavoriteDrink/:id', async (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -407,7 +426,7 @@ app.get('/addFavoriteDrink/:id', async (req,res) => {
         res.render('drinks', {user:req.session.user, favorites: favorites, categories:categories, entries:""});
     })
 })
-app.get('/logout', (req,res)=>{
+app.get(BASE_URL+'logout', (req,res)=>{
     req.session.user='guest';
     req.session.favorites = [];
     req.session.drinkInventory = [];
