@@ -13,7 +13,7 @@ const MONGO_DB_NAME = process.env.MONGO_DB_DB;
 const API_KEY_SPOON = process.env.API_KEY_SPOON;
 const COCKTAIL_DB = 'https://www.thecocktaildb.com/api/json/v1/1/';
 const COCK_CAT = new Set();
-const BASE_URL = '/recipeGenerator/';
+const BASE_URL = 'recipeGenerator/';
 
 // FINAL TODO: ADd more filters for the search. Should be multi ingredient and inventory search. 
 
