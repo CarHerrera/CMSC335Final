@@ -67,7 +67,7 @@ app.get('//', (req,res) =>{
     res.render('home',{user: req.session.user});
 })
 
-app.get('/account', (req,res) => {
+app.get('account', (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -77,7 +77,7 @@ app.get('/account', (req,res) => {
     res.render('account', {user:req.session.user, error:""});
 })
 
-app.post('/login', async (req,res) => {
+app.post('login', async (req,res) => {
     let {username, pword} = req.body;
     let r;
     try {
@@ -99,7 +99,7 @@ app.post('/login', async (req,res) => {
         res.render('account',{user:req.session.user, error:"Password/Username was not correct"});
     }
 })
-app.post('/signup', async (req,res) => {
+app.post('signup', async (req,res) => {
     let {username, pword, age, allergies} = req.body;
     let app = {_id:username, user: username, pword:pword, age:age, allergies: allergies, 
         drinkProfile:{ favorites:[], recents:[], inventory:[]}, 
@@ -119,7 +119,7 @@ app.post('/signup', async (req,res) => {
     res.render('home', {user: username, entries:""});
 })
 
-app.get('/foodRecipes', async (req,res) => {
+app.get('foodRecipes', async (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -129,7 +129,7 @@ app.get('/foodRecipes', async (req,res) => {
     }
     res.render('food', {user: req.session.user, entries:"", categories:"", favorites: "", inventory: ""});
 });
-app.post('/processMealFilter', (req,res) =>{
+app.post('processMealFilter', (req,res) =>{
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -145,7 +145,7 @@ app.post('/processMealFilter', (req,res) =>{
         })
     
 })
-app.get('/drinkRecipes',async (req,res) =>{
+app.get('drinkRecipes',async (req,res) =>{
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -192,7 +192,7 @@ app.get('/drinkRecipes',async (req,res) =>{
             res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favs, inventory: inventory});
     })    
 });
-app.post('/remove', async (req,res) =>{
+app.post('remove', async (req,res) =>{
     if(req.session.user == null){
     req.session.user = 'guest';
     req.session.favorites = [];        
@@ -243,7 +243,7 @@ app.post('/remove', async (req,res) =>{
             res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favs, inventory: inventory});
     })    
 })
-app.post('/processFilters', (req,res)=>{
+app.post('processFilters', (req,res)=>{
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -286,7 +286,7 @@ app.post('/processFilters', (req,res)=>{
 
 
 })
-app.post('/addItem', async (req,res) => {
+app.post('addItem', async (req,res) => {
     let item = Object.setPrototypeOf(req.body, Object.prototype);
     try {
         await client.connect();
@@ -303,10 +303,10 @@ app.post('/addItem', async (req,res) => {
     
     res.render('profile', {user: req.session.user})
 })
-app.get('/error', (req,res)=>{
+app.get('error', (req,res)=>{
     res.render('error', {user: req.session.user})
 })
-app.get('/drinks/:id', async (req,res) =>{
+app.get('drinks/:id', async (req,res) =>{
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -372,7 +372,7 @@ app.get('/drinks/:id', async (req,res) =>{
         console.log(e);
     })
 })
-app.get('/profile/:id', (req,res) => {
+app.get('profile/:id', (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -382,7 +382,7 @@ app.get('/profile/:id', (req,res) => {
     }
     res.render('profile', {user: req.session.user})
 })
-app.get('/addFavoriteDrink/:id', async (req,res) => {
+app.get('addFavoriteDrink/:id', async (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -425,7 +425,7 @@ app.get('/addFavoriteDrink/:id', async (req,res) => {
         res.render('drinks', {user:req.session.user, favorites: favorites, categories:categories, entries:""});
     })
 })
-app.get('/logout', (req,res)=>{
+app.get('logout', (req,res)=>{
     req.session.user='guest';
     req.session.favorites = [];
     req.session.drinkInventory = [];
