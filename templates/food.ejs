@@ -34,7 +34,7 @@
                 <div class ='main-item item2'>
                     <h1>Meal Inventory</h1>
                     <div class='inventory'>
-                        <form action="remove" method="post">
+                        <form action="recipeGenerator/remove" method="post">
                             <%- inventory %>
                             <input type ='submit' value="Remove"> 
                         </form>
@@ -42,7 +42,7 @@
                 </div>
                 <div class ='main-item item3'>
                     <h1>Meal Finder</h1>
-                    <form method="post" action = 'processMealFilter'>
+                    <form method="post" action = 'recipeGenerator/processMealFilter'>
                         <fieldset>
                             <label for="category">Choose a Category</label> 
                             <select name ='category' required>

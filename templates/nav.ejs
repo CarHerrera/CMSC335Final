@@ -2,9 +2,10 @@
 <div class="nav-container">
 
     <% if (user != 'guest') {%>
-        <a id="split" href="/"><%=user%> Recipe Hub! </a>
+        <a href="/">Home</a>
+        <a id="split" href="recipeGenerator/"><%=user%> Recipe Hub! </a>
     <% } else {%>
-        <a id="split" href="/">Recipe Hub</a>
+        <a id="split" href="recipeGenerator/">Recipe Hub</a>
     <% }%>
     
     <% if (user == 'guest') {%>

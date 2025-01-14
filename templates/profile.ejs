@@ -10,7 +10,7 @@
         <%- include('nav'); -%>
         <% if (user != 'guest') {%>
             <div class="profile-container">
-                <form autocomplete="off" action="/addItem" method="post">
+                <form autocomplete="off" action="recipeGenerator/addItem" method="post">
                     <div class="autocomplete" style="width:100%;">
                       <input id="myInput" type="text" name="ingredient" placeholder="Corn">
                     </div>
