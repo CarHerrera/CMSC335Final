@@ -177,7 +177,7 @@ app.get('/drinkRecipes',async (req,res) =>{
             results.forEach(drink => {
                 favs += "<tr>"
                 let drinks = drink.drinks[0];
-                favs += `<td>${drinks.strDrink}</td><td><a href="drinks/${drinks.idDrink}">More Info</a></td>`;
+                favs += `<td>${drinks.strDrink}</td><td><a href="recipeGenerator/drinks/${drinks.idDrink}">More Info</a></td>`;
                 COCK_CAT.add(drinks.strDrink);
                 favs += "</tr>";
             })
@@ -228,7 +228,7 @@ app.post('/remove', async (req,res) =>{
             results.forEach(drink => {
                 favs += "<tr>"
                 let drinks = drink.drinks[0];
-                favs += `<td>${drinks.strDrink}</td><td><a href="drinks/${drinks.idDrink}">More Info</a></td>`;
+                favs += `<td>${drinks.strDrink}</td><td><a href="recipeGenerator/drinks/${drinks.idDrink}">More Info</a></td>`;
                 COCK_CAT.add(drinks.strDrink);
                 favs += "</tr>";
             })
@@ -265,14 +265,14 @@ app.post('/processFilters', (req,res)=>{
             let entries = "";
             let queryResults = results.pop().drinks;
             queryResults.forEach(r => {
-                entries += `<tr><td>${r.strDrink}</td> <td><a href="drinks/${r.idDrink}">Info Link</a></td></tr>`;
+                entries += `<tr><td>${r.strDrink}</td> <td><a href="recipeGenerator/drinks/${r.idDrink}">Info Link</a></td></tr>`;
             })
             
             COCK_CAT.forEach(e => {categories+=`<option value="${e}">${e}</option>`;});
             let favorites = ""
             results.forEach(r => {
                 drink = r.drinks[0];
-                favorites +=  `<tr><td>${drink.strDrink}</td><td><a href="drinks/${drink.idDrink}">More Info</a></td></tr>`;
+                favorites +=  `<tr><td>${drink.strDrink}</td><td><a href="recipeGenerator/drinks/${drink.idDrink}">More Info</a></td></tr>`;
             })
             let inventory = "";
             req.session.drinkInventory.forEach((ing) => {
@@ -412,7 +412,7 @@ app.get('/addFavoriteDrink/:id', async (req,res) => {
         let favorites = ""
         data.forEach(r => {
             drink = r.drinks[0];
-            favorites +=  `<tr><td>${drink.strDrink}</td><td><a href="/drinks/${drink.idDrink}">More Info</a></td></tr>`;
+            favorites +=  `<tr><td>${drink.strDrink}</td><td><a href="recipeGenerator/drinks/${drink.idDrink}">More Info</a></td></tr>`;
         })
         let categories ="";
         COCK_CAT.forEach(e => {categories+=`<option value="${e}">${e}</option>`;});
