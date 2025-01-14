@@ -422,7 +422,7 @@ app.get('/addFavoriteDrink/:id', async (req,res) => {
                         <input type="checkbox" name="${ing}" class="remove">
                         <br>`
         })
-        res.render('drinks', {user:req.session.user, favorites: favorites, categories:categories, entries:""});
+        res.render('drinks', {user:req.session.user, favorites: favorites, categories:categories, inventory:inventory, entries:""});
     })
 })
 app.get('/logout', (req,res)=>{
