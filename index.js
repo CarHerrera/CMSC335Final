@@ -90,7 +90,7 @@ app.post('/login', async (req,res) => {
     }
     if(r){
         req.session.user = r.user;
-        req.session.favorites = r.drinkProfile.favorite;
+        req.session.favorites = [...new Set(r.drinkProfile.favorite)];
         req.session.drinkInventory = r.drinkProfile.inventory;
         req.session.save();
         // console.log(req.session.favorites);
