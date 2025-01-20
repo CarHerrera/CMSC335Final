@@ -162,9 +162,11 @@ app.get('/drinkRecipes',async (req,res) =>{
     // } finally{
     //     await client.close();
     // }
-    let setFavorite = new Set(req.session.favorites);
+    let setFavorite = req.session.favorites;
+	console.log(setFavorite);
     let promiseList = [];
     setFavorite.forEach(r => {
+	console.log(r);
         promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
     })
     promiseList.push((fetch (`${COCKTAIL_DB}list.php?c=list`).then(t => t.json())));
@@ -189,7 +191,7 @@ app.get('/drinkRecipes',async (req,res) =>{
                             <br>`
             })
             // results.forEach(i => console.log(i));
-            res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: setFavorite, inventory: inventory});
+            res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favs, inventory: inventory});
     })    
 });
 app.post('/remove', async (req,res) =>{
