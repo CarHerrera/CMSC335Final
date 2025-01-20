@@ -70,7 +70,7 @@ app.get('/', (req,res) =>{
 app.get('/account', (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
-        req.session.favorites = new Set();
+        req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
     }
@@ -90,7 +90,7 @@ app.post('/login', async (req,res) => {
     }
     if(r){
         req.session.user = r.user;
-        req.session.favorites = new Set(r.drinkProfile.favorites);
+        req.session.favorites = r.drinkProfile.favorite;
         req.session.drinkInventory = r.drinkProfile.inventory;
         req.session.save();
         // console.log(req.session.favorites);
@@ -122,7 +122,7 @@ app.post('/signup', async (req,res) => {
 app.get('/foodRecipes', async (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
-        req.session.favorites = new Set();
+        req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
         res.render('error', {user: req.session.user})
@@ -132,7 +132,7 @@ app.get('/foodRecipes', async (req,res) => {
 app.post('/processMealFilter', (req,res) =>{
     if(req.session.user == null){
         req.session.user = 'guest';
-        req.session.favorites = new Set();
+        req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
         res.render('error', {user: req.session.user})
@@ -148,23 +148,23 @@ app.post('/processMealFilter', (req,res) =>{
 app.get('/drinkRecipes',async (req,res) =>{
     if(req.session.user == null){
         req.session.user = 'guest';
-        req.session.favorites = new Set();
+        req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
         res.render('error', {user: req.session.user})
     }
-    let r;
-    try {
-        await client.connect();
-        r = await client.db(MONGO_DB_NAME).collection('users').findOne({_id: req.session.user});
-    } catch (e){
-        console.log(e)
-    } finally{
-        await client.close();
-    }
-    let temp = "";
+    // let r;
+    // try {
+    //     await client.connect();
+    //     r = await client.db(MONGO_DB_NAME).collection('users').findOne({_id: req.session.user});
+    // } catch (e){
+    //     console.log(e)
+    // } finally{
+    //     await client.close();
+    // }
+    let setFavorite = new Set(req.session.favorites);
     let promiseList = [];
-    req.session.favorites.forEach(r => {
+    setFavorite.forEach(r => {
         promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
     })
     promiseList.push((fetch (`${COCKTAIL_DB}list.php?c=list`).then(t => t.json())));
@@ -189,13 +189,13 @@ app.get('/drinkRecipes',async (req,res) =>{
                             <br>`
             })
             // results.forEach(i => console.log(i));
-            res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favs, inventory: inventory});
+            res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: setFavorite, inventory: inventory});
     })    
 });
 app.post('/remove', async (req,res) =>{
     if(req.session.user == null){
     req.session.user = 'guest';
-    req.session.favorites = new Set();        
+    req.session.favorites = [];        
     req.session.drinkInventory = [];
     req.session.save();
     res.render('error', {user: req.session.user})
@@ -246,7 +246,7 @@ app.post('/remove', async (req,res) =>{
 app.post('/processFilters', (req,res)=>{
     if(req.session.user == null){
         req.session.user = 'guest';
-        req.session.favorites = new Set();
+        req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
         res.render('error', {user: req.session.user})
@@ -309,23 +309,23 @@ app.get('/error', (req,res)=>{
 app.get('/drinks/:id', async (req,res) =>{
     if(req.session.user == null){
         req.session.user = 'guest';
-        req.session.favorites = new Set();
+        req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
         res.render('error', {user: req.session.user})
     }
     let {id} = req.params;
-    try {
-        await client.connect();
-        let query = {_id: req.session.user}
-        let recent = {$push: {'drinkProfile.recents': id}}
-        r = await client.db(MONGO_DB_NAME).collection('users').updateOne(query,recent);
-        console.log(`Application entry created with id ${r.id}`);
-    } catch (e){
-        console.log(e)
-    } finally{
-        await client.close();
-    }
+    // try {
+    //     await client.connect();
+    //     let query = {_id: req.session.user}
+    //     let recent = {$push: {'drinkProfile.recents': id}}
+    //     r = await client.db(MONGO_DB_NAME).collection('users').updateOne(query,recent);
+    //     console.log(`Application entry created with id ${r.id}`);
+    // } catch (e){
+    //     console.log(e)
+    // } finally{
+    //     await client.close();
+    // }
     fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id}`)
     .then( r => {
             if (r.ok){
@@ -336,7 +336,7 @@ app.get('/drinks/:id', async (req,res) =>{
         
         let drink = d.drinks[0];
         // console.log(drink);
-        let favBool = req.session.favorites.has(id);
+        let favBool = req.session.favorites.includes(id);
         let instr = `<span>${drink.strInstructions}</span>`;
         let img = drink.strDrinkThumb;
         let imgUrl = `<img src=${img} class='drinkImage'>`
@@ -376,7 +376,7 @@ app.get('/drinks/:id', async (req,res) =>{
 app.get('/profile/:id', (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
-        req.session.favorites = new Set();
+        req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
         res.render('error', {user: req.session.user})
@@ -386,26 +386,14 @@ app.get('/profile/:id', (req,res) => {
 app.get('/addFavoriteDrink/:id', async (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
-        req.session.favorites = new Set();
+        req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
         res.render('error', {user: req.session.user})
     }
     let {id} = req.params;
     // console.log(req.params);
-    if(req.session.favorites.has(id)){
-        try {
-            await client.connect();
-            let query = {_id: req.session.user}
-            let newFav = {$push: {'drinkProfile.favorites': id}}
-            r = await client.db(MONGO_DB_NAME).collection('users').updateOne(query,newFav);
-            console.log(`Application entry created with id ${r.id}`);
-        } catch (e){
-            console.log(e)
-        } finally{
-            await client.close();
-        }
-    } else {
+    if(!req.session.favorites.includes(id)){
         try {
             await client.connect();
             let query = {_id: req.session.user}
@@ -417,6 +405,18 @@ app.get('/addFavoriteDrink/:id', async (req,res) => {
         } finally{
             await client.close();
         }
+    } else {
+        try {
+            await client.connect();
+            let query = {_id: req.session.user}
+            let newFav = {$push: {'drinkProfile.favorites': id}}
+            r = await client.db(MONGO_DB_NAME).collection('users').updateOne(query,newFav);
+            console.log(`Application entry created with id ${r.id}`);
+        } catch (e){
+            console.log(e)
+        } finally{
+            await client.close();
+        } 
     }
     
     let promiseList = [];
@@ -473,7 +473,7 @@ app.get('/addFavoriteDrink/:id', async (req,res) => {
 })
 app.get('/logout', (req,res)=>{
     req.session.user='guest';
-    req.session.favorites = new Set();
+    req.session.favorites = [];
     req.session.drinkInventory = [];
     req.session.save();
     res.render('home',{user: req.session.user});
