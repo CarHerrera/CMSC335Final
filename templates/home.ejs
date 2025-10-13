@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <title>Recipe Generator</title>
-        <link rel="stylesheet" type="text/css" href="main.css">
+        <link rel="stylesheet" type="text/css" href="tailwind.css">
     </head>
     <body>
         <%- include('nav'); -%>
@@ -45,10 +45,10 @@
             <% } else {%>
                 
                 <div class="guestPop" style="color:black">
-                    <h1 class="guestHeader">Please create an account to use this website to its fullest capabiltiies</h1>
+                    <h1 class="guestHeader text-3xlr">Please create an account to use this website to its fullest capabiltiies</h1>
                     <br>
-                    <a class="guestLink">Guest Query</a>
-                    <a class="guestLink" href="account">Log in/Sign up</a>
+                    <a class="text-3xl">Guest Query</a>
+                    <a class="text-xl p-8" href="account">Log in/Sign up</a>
                 </div>                
             <% }%>
             
