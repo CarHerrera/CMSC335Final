@@ -1,5 +1,4 @@
 @import "tailwindcss";
-
 :root{
     --black: #020202;
     --rose: #e5d1d0;
@@ -10,7 +9,6 @@
     --width: 100vmax;
 }
 body{
-    background-color: var(--red); 
     margin:0;
 }
 

@@ -5,9 +5,9 @@
         <title>Recipe Generator</title>
         <link rel="stylesheet" type="text/css" href="tailwind.css">
     </head>
-    <body>
+    <body class="bg-black md:w-full">
         <%- include('nav'); -%>
-        <main>
+        <main class="h-screen grid grid-rows-8">
             <% if (user != 'guest') {%>
                 <div class="main-container">
                     <div class="main-item item1">
@@ -43,12 +43,13 @@
                     </div>
                 </div>
             <% } else {%>
-                
-                <div class="guestPop" style="color:black">
-                    <h1 class="guestHeader text-3xlr">Please create an account to use this website to its fullest capabiltiies</h1>
-                    <br>
-                    <a class="text-3xl">Guest Query</a>
-                    <a class="text-xl p-8" href="account">Log in/Sign up</a>
+                <div class="md:w-full bg-emerald-950 row-start-2 row-span-5 grid grid-rows 3" style="color:black">
+                    
+                    <h1 class="text-center text-5xl text-white pt-10">Please create an account to use this website to its fullest capabiltiies</h1>
+                    <div class="flex items-center">
+                        <button class="relative text-xl inset-ring-3 shadow-xl text-white p-10 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-800 rounded-full ">Guest Query</button>
+                    </div>
+                    
                 </div>                
             <% }%>
             
