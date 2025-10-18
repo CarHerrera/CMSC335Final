@@ -5,10 +5,14 @@
         <title>Recipe Generator</title>
         <link rel="stylesheet" type="text/css" href="tailwind.css">
     </head>
-    <body>
-        <div class = 'guestPop'>
-            <h1>Something went wrong, please go back home</h1>
-            <a href="/">Home</a>
-        </div>
+    <body class="bg-black md:w-screen h-screen">
+        <%- include('nav'); -%>
+        <main class="h-screen grid grid-rows-8">
+                <div class="bg-emerald-950 row-start-2 row-span-5 grid grid-rows 3">
+                    <h1>Something went wrong, please go back home</h1>
+                    <a href="/">Home</a>                    
+            </div>  
+        </main> 
     </body>
+
 </html>

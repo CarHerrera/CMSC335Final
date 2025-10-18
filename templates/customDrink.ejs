@@ -6,11 +6,11 @@
         <link rel="stylesheet" type="text/css" href="/tailwind.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     </head>
-    <body>
+    <body class="bg-black md:w-screen h-screen">
         <%- include('nav'); -%>
         <% if (user != 'guest') {%>
-            <main>
-                <div class="drink-container">
+            <main class="h-screen grid grid-rows-8"">
+                <div class="bg-emerald-950 row-start-2 row-span-5 text-white">
                     <div class="favorite">
                         <h1><%= drinkName %></h1>
                         <a class="fa fa-star" id="favoriteButton" href="addFavoriteDrink/<%-id%>"></a>

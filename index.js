@@ -58,9 +58,48 @@ app.use(
 );
 
 /* Site pages */
-app.get('//', (req,res) =>{
+app.get('//', async (req,res) =>{
+    let app = {
+        _id:"",
+        user: "", 
+        pword:"", 
+        age:"", 
+        allergies: "", 
+        drinkProfile:
+            { 
+                favorites:[], 
+                recents:[], 
+                inventory:[]
+            }, 
+        foodProfile:{
+            favorites:[], 
+            recents:[], 
+            inventory:[]},
+        favorites: [],
+    };
+    let guestId;
+    try {
+        await client.connect();
+        let db = await client.db(MONGO_DB_NAME).collection('guests');
+        let count = await db.countDocuments();
+        app._id = `${count}`;
+        app.user = `guest ${count}`;
+        let r = await db.insertOne(app);
+        console.log(`${count}`);
+        console.log(`Application entry created with id ${r.insertedId}`);
+        req.session.user = app.user;
+        req.session.favorites = app.favorites;
+        req.session.drinkInventory = app.drinkProfile.inventory;
+        req.session.save();
+    } catch (e){
+        console.log(e)
+    } finally{
+        await client.close();
+    }   
     if(req.session.user == null){
-        req.session.user = 'guest';
+        req.session.user = app.user;
+        req.session.favorites = app.favorites;
+        req.session.drinkInventory = app.drinkProfile.inventory;
         req.session.save();
     }
     // console.log(req.session.user);
@@ -82,7 +121,7 @@ app.post('/login', async (req,res) => {
     let r;
     try {
         await client.connect();
-        r = await client.db(MONGO_DB_NAME).collection('users').findOne({_id: username, pword:pword});
+        r = await client.db(MONGO_DB_NAME).collection('guests').findOne({_id: username, pword:pword});
     } catch (e){
         console.log(e)
     } finally{
@@ -106,7 +145,7 @@ app.post('/signup', async (req,res) => {
         foodProfile:{favorites:[], recents:[], inventory:[]},};
     try {
         await client.connect();
-        let r = await client.db(MONGO_DB_NAME).collection('users').insertOne(app);
+        let r = await client.db(MONGO_DB_NAME).collection('guests').insertOne(app);
         console.log(`Application entry created with id ${r.insertedId}`);
         req.session.user = app.user;
         req.session.save();
@@ -156,7 +195,7 @@ app.get('/drinkRecipes',async (req,res) =>{
     let r;
     try {
         await client.connect();
-        r = await client.db(MONGO_DB_NAME).collection('users').findOne({_id: req.session.user});
+        r = await client.db(MONGO_DB_NAME).collection('guests').findOne({_id: req.session.user});
     } catch (e){
         console.log(e)
     } finally{
@@ -205,7 +244,7 @@ app.post('/remove', async (req,res) =>{
         await client.connect();
         let query = {_id: req.session.user}
         let add = {$pull: {'drinkProfile.inventory': {$in: Object.keys(result)}}}
-        r = await client.db(MONGO_DB_NAME).collection('users').updateOne(query,add);
+        r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,add);
         req.session.drinkInventory = req.session.drinkInventory.filter(r=> !Object.keys(result).includes(r));
         console.log(`Application entry created with id ${r.id}`);
     } catch (e){
@@ -292,7 +331,7 @@ app.post('/addItem', async (req,res) => {
         await client.connect();
         let query = {_id: req.session.user}
         let add = {$push: {'drinkProfile.inventory': item.ingredient}}
-        r = await client.db(MONGO_DB_NAME).collection('users').updateOne(query,add);
+        r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,add);
         req.session.drinkInventory.push(item.ingredient);
         console.log(`Application entry created with id ${r.id}`);
     } catch (e){
@@ -319,7 +358,7 @@ app.get('/drinks/:id', async (req,res) =>{
         await client.connect();
         let query = {_id: req.session.user}
         let recent = {$push: {'drinkProfile.recents': id.id}}
-        r = await client.db(MONGO_DB_NAME).collection('users').updateOne(query,recent);
+        r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,recent);
         console.log(`Application entry created with id ${r.id}`);
     } catch (e){
         console.log(e)
@@ -397,7 +436,7 @@ app.get('/addFavoriteDrink/:id', async (req,res) => {
         await client.connect();
         let query = {_id: req.session.user}
         let newFav = {$push: {'drinkProfile.favorites': id}}
-        r = await client.db(MONGO_DB_NAME).collection('users').updateOne(query,newFav);
+        r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,newFav);
         console.log(`Application entry created with id ${r.id}`);
     } catch (e){
         console.log(e)

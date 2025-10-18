@@ -5,10 +5,10 @@
         <title>Recipe Generator</title>
         <link rel="stylesheet" type="text/css" href="tailwind.css">
     </head>
-    <body class="bg-black md:w-full">
+    <body class="bg-black md:w-screen h-screen">
         <%- include('nav'); -%>
         <main class="h-screen grid grid-rows-8">
-            <% if (user != 'guest') {%>
+            <!-- <% if (user != 'guest') {%>
                 <div class="main-container">
                     <div class="main-item item1">
                         <h1>Recent Meals and Drinks</h1>
@@ -41,18 +41,18 @@
                         <a class="genButton">Add extra filters</a>
                     </div>
                     </div>
+                </div> -->
+            <!-- <% } else {%> -->
+              
+            <!-- <% }%> -->
+                <div class="bg-emerald-950 row-start-2 row-span-5 grid grid-rows 3">
+                    
+                <h1 class="text-center text-5xl text-white pt-10">Please create an account to use this website to its fullest capabiltiies</h1>
+                <div class="flex items-center">
+                    <button class="relative text-xl inset-ring-3 shadow-xl text-white p-10 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-800 rounded-full ">Guest Query</button>
                 </div>
-            <% } else {%>
-                <div class="md:w-full bg-emerald-950 row-start-2 row-span-5 grid grid-rows 3" style="color:black">
                     
-                    <h1 class="text-center text-5xl text-white pt-10">Please create an account to use this website to its fullest capabiltiies</h1>
-                    <div class="flex items-center">
-                        <button class="relative text-xl inset-ring-3 shadow-xl text-white p-10 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-800 rounded-full ">Guest Query</button>
-                    </div>
-                    
-                </div>                
-            <% }%>
-            
+            </div>  
         </main> 
     </body>
 </html>

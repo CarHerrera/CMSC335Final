@@ -5,17 +5,19 @@
         <title>Recipe Generator</title>
         <link rel="stylesheet" type="text/css" href="/tailwind.css">
     </head>
-    <body>
+    <body class="bg-black md:w-screen h-screen">
         <%- include('nav'); -%>
         <% if (user != 'guest') {%>
-            <div class="profile-container">
+            <main class="h-screen grid grid-rows-8">
+                <div class="bg-emerald-950 row-start-2 row-span-5 text-white">
                 <form autocomplete="off" action="/addItem" method="post">
                     <div class="autocomplete" style="width:100%;">
-                      <input id="myInput" type="text" name="ingredient" placeholder="Corn">
+                      <input class="w-screen" id="myInput" type="text" name="ingredient" placeholder="Corn">
                     </div>
                     <input type="submit">
                   </form>
             </div>
+            </main>
         <%} else {%>
                 <%- include('error'); -%>
         <%}%>

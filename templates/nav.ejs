@@ -1,23 +1,11 @@
 
 <div class="w-screen bg-emerald-950 flex flex-row drop-shadow-lg">
 
-    <% if (user != 'guest') {%>
         <a class="text-white float-left p-10" href="/"><%=user%> Recipe Hub! </a>
-    <% } else {%>
-        <a class="text-white float-left p-10" href="/">Recipe Hub</a>
-    <% }%>
-    
-    <% if (user == 'guest') {%>
         <a class="flex-grow"></a>
-        <a class ='text-center text-white p-10 float-right' >Drinks</a> 
-        <a class ='text-center text-white p-10 float-right'>Food Recipes</a>
-        <a class ='text-center text-white p-10 float-right' href="account">Login/Singup</a>
-    <% } else {%>
-        <a class="flex-grow"></a>
-        <a class ='text-center text-white p-10 float-right' href="drinkRecipes">Drinks</a> 
-        <a class ='text-center text-white p-10 float-right' href="foodRecipes">Food Recipes</a>
-        <a class ='text-center text-white p-10 float-right'href="profile/<%=user%>"><%=user%>'s Profile</a>
-        <a class ='text-center text-white p-10 float-right'href="logout">Logout</a>
+        <a class ='text-center text-white p-10 float-right' href="/drinkRecipes">Drinks</a> 
+        <a class ='text-center text-white p-10 float-right' href="/foodRecipes">Food Recipes</a>
+        <a class ='text-center text-white p-10 float-right'href="/profile/<%=user%>"><%=user%>'s Profile</a>
+        <!-- <a class ='text-center text-white p-10 float-right'href="logout">Logout</a> -->
 
-    <% }%>
 </div>
