@@ -10,24 +10,24 @@
         <%- include('nav'); -%>
         <% if (user != 'guest') {%>
             <main class="h-screen grid grid-rows-8"">
-                <div class="bg-emerald-950 row-start-2 row-span-5 text-white">
-                    <div class="favorite">
-                        <h1><%= drinkName %></h1>
-                        <a class="fa fa-star" id="favoriteButton" href="addFavoriteDrink/<%-id%>"></a>
-                    </div>
+                <div class="bg-emerald-950 row-start-2 row-span-5 text-white flex flex-col justify-center items-center overflow-auto p-10">
+                        <h1 class="pt-10"><%= drinkName %></h1>
+                        <!-- <a class="fa fa-star" id="favoriteButton" href="addFavoriteDrink/<%-id%>"></a> -->
                     
                     <br>
-                    <div class="content-container">
-                            <%- image %>
-                        <div>
-                            <h2>Ingredients</h3>
-                            <%- ingredients %>    
-                        </div>
-                        
-                        
+                        <%- image %>
+                    <br>
+                    <div>
+                        <h2>Ingredients</h2>
+                        <br>
+                        <%- ingredients %>    
                     </div>
-                    <h3>Instructions</h2>
-                        <%- instructions%>
+                    <div>
+                        <h3>Instructions</h3>
+                        <br>
+                        <%- instructions%>    
+                    </div>
+                    
     
                 </div>
     

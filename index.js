@@ -377,7 +377,7 @@ app.get('/drinks/:id', async (req,res) =>{
         // console.log(drink);
         let instr = `<span>${drink.strInstructions}</span>`;
         let img = drink.strDrinkThumb;
-        let imgUrl = `<img src=${img} class='drinkImage'>`
+        let imgUrl = `<img class="rounded-full size-[250px]" src=${img}>`
         let name = drink.strDrink;
         let ing = [drink.strIngredient1,drink.strIngredient2,drink.strIngredient3,
             drink.strIngredient4,drink.strIngredient5,drink.strIngredient6,
