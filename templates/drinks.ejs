@@ -10,7 +10,7 @@
         <%- include ('nav'); -%>
         <% if (user != 'guest') {%>
            <main class="h-screen grid grid-rows-8">
-                <div class="bg-emerald-950 row-start-2 row-span-5 grid grid-cols-2 text-white">
+                <div class="bg-emerald-950 row-start-2 row-span-5 grid grid-rows-2 grid-cols-2 text-white">
                     <div class ='flex flex-col m-5'>
                         <h1 class="my-5">Favorite Drinks</h1>
                         <div class="flex-grow bg-slate-800">
@@ -40,7 +40,7 @@
                             </form>
                         </div>
                     </div>
-                    <div class ='col-span-2 m-5 overflow-y-auto'>
+                    <div class ='col-span-2 m-5 overflow-y-scroll'>
                         <h1>Drink Finder</h1>
                         <form method="post" action = 'processFilters'>
                             <fieldset>

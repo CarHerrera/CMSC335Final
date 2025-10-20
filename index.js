@@ -372,12 +372,25 @@ app.get('/drinks/:id', async (req,res) =>{
             }
         }   
     ).then(d => {
-        
         let drink = d.drinks[0];
+        const pattern = /([0-9]+\.?| )? ?([\(\)\":A-Za-z0-9\'’]+(\.| |, ?)?)+/g;
+        // patternTest = /([0-9]+\.?| )? ?([\(\)\":A-Za-z0-9\'’]+(\.| |, ?)?)+/g;
         // console.log(drink);
-        let instr = `<span>${drink.strInstructions}</span>`;
+        // let instr = `<span>${drink.strInstructions}</span>`;
+        let instr = drink.strInstructions.match(pattern);
+
+        instr.forEach((line, index, arr)=>{
+            let tmp = line.trim();
+            let numCheck = tmp.match(/[0-9]+\.(?! )/);
+            // console.log(line);
+            // console.log(numCheck);
+            if ( numCheck != null){
+                tmp = tmp.replace(numCheck[0], `${numCheck[0]} `);
+            }
+            arr[index] = tmp;
+        })
+        // console.log();
         let img = drink.strDrinkThumb;
-        let imgUrl = `<img class="rounded-full size-[250px]" src=${img}>`
         let name = drink.strDrink;
         let ing = [drink.strIngredient1,drink.strIngredient2,drink.strIngredient3,
             drink.strIngredient4,drink.strIngredient5,drink.strIngredient6,
@@ -391,6 +404,12 @@ app.get('/drinks/:id', async (req,res) =>{
             drink.strMeasure10,drink.strMeasure11,drink.strMeasure12,
             drink.strMeasure13,drink.strMeasure14,drink.strMeasure15,
         ];
+        let instrList = '<ol>';
+
+        for(i = 0; i<instr.length; i++){
+            instrList += `<li>${instr[i]}\n</li>`;
+        }
+        instrList+="</ol>";
         let ingList = '<ol>';
 
         for(i = 0; i<=14; i++){
@@ -406,7 +425,11 @@ app.get('/drinks/:id', async (req,res) =>{
         // console.log(measureList);
         // let ls = instr.split(".");
         // console.log(instr);
-        res.render('customDrink',{user: req.session.user, id:id.id, drinkName: name, image:imgUrl, instructions:instr, ingredients:ingList} );  
+        let fav = false;        
+        if(req.session.favorites.includes(id.id)){
+            fav = true;
+        }
+        res.render('customDrink',{user: req.session.user, id:id.id, drinkName: name, image:img, instructions:instrList, ingredients:ingList ,fav:fav} );  
     }).catch(e => {
         console.log(e);
     })
@@ -421,7 +444,7 @@ app.get('/profile/:id', (req,res) => {
     }
     res.render('profile', {user: req.session.user})
 })
-app.get('/addFavoriteDrink/:id', async (req,res) => {
+app.post('/addFavoriteDrink/:id', async (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -430,39 +453,35 @@ app.get('/addFavoriteDrink/:id', async (req,res) => {
         res.render('error', {user: req.session.user})
     }
     let {id} = req.params;
-    // console.log(req.params);
-    req.session.favorites.push(id);
+    // console.log();
+    let added = true;
     try {
         await client.connect();
-        let query = {_id: req.session.user}
-        let newFav = {$push: {'drinkProfile.favorites': id}}
-        r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,newFav);
-        console.log(`Application entry created with id ${r.id}`);
+        const query = {user: req.session.user};
+        let newFav = {$push: {'drinkProfile.favorites': id}};
+        let removeFav = {$pull: {'drinkProfile.favorites': id}};
+        // r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,newFav);
+        r = await client.db(MONGO_DB_NAME).collection('guests').findOne(query);
+        if (r){
+            if(r.drinkProfile.favorites.includes(id)){
+                r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,removeFav);
+                req.session.favorites = req.session.favorites.filter((x) => {return x != id});                
+                added = false;
+            } else {
+                r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,newFav);
+                req.session.favorites.push(id);
+
+                
+            }
+        }
+        // console.log(`Application entry created with id ${r.id}`);
     } catch (e){
         console.log(e)
     } finally{
         await client.close();
     }
-    let promiseList = [];
-    req.session.favorites.forEach(r => {
-        promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
-    })
-    Promise.all([...promiseList]).then(data =>{
-        let favorites = ""
-        data.forEach(r => {
-            drink = r.drinks[0];
-            favorites +=  `<tr><td>${drink.strDrink}</td><td><a href="/drinks/${drink.idDrink}">More Info</a></td></tr>`;
-        })
-        let categories ="";
-        COCK_CAT.forEach(e => {categories+=`<option value="${e}">${e}</option>`;});
-        let inventory = "";
-        req.session.drinkInventory.forEach((ing) => {
-            inventory+=`<label class="drinkItem" for="${ing}">${ing}</label>
-                        <input type="checkbox" name="${ing}" class="remove">
-                        <br>`
-        })
-        res.render('drinks', {user:req.session.user, favorites: favorites, categories:categories, entries:""});
-    })
+
+    res.json({isFavorited: added})
 })
 app.get('/logout', (req,res)=>{
     req.session.user='guest';

@@ -4,7 +4,8 @@
   "description": "Project for CMSC335. Website with an API and MongoDB",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npx @tailwindcss/cli -i ./static/main.css -o ./static/tailwind.css --watch\" \"node index.js\""
   },
   "repository": {
     "type": "git",
@@ -23,5 +24,8 @@
     "fs": "^0.0.1-security",
     "mongodb": "^6.11.0",
     "tailwindcss": "^4.1.14"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
