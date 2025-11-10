@@ -325,7 +325,14 @@ app.post('/processFilters', (req,res)=>{
 
 
 })
-app.post('/addItem', async (req,res) => {
+app.post('/addDrink', async (req,res) => {
+    if(req.session.user == null){
+        req.session.user = 'guest';
+        req.session.favorites = [];
+        req.session.drinkInventory = [];
+        req.session.save();
+        res.render('error', {user: req.session.user})
+    }
     let item = Object.setPrototypeOf(req.body, Object.prototype);
     try {
         await client.connect();
@@ -340,7 +347,35 @@ app.post('/addItem', async (req,res) => {
         await client.close();
     }
     
-    res.render('profile', {user: req.session.user})
+    let temp = "";
+    let promiseList = [];
+    req.session.favorites.forEach(r => {
+        promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
+    })
+    promiseList.push((fetch (`${COCKTAIL_DB}list.php?c=list`).then(t => t.json())));
+    Promise.all([...promiseList])
+        .then(results => {
+            let categories = results.pop().drinks;
+            let options = "";
+            categories.forEach(e => {options+=`<option value="${e.strCategory}">${e.strCategory}</option>`;})   
+            let favs = "";
+            results.forEach(drink => {
+                favs += "<tr>"
+                let drinks = drink.drinks[0];
+                favs += `<td>${drinks.strDrink}</td><td><a href="/drinks/${drinks.idDrink}">More Info</a></td>`;
+                COCK_CAT.add(drinks.strDrink);
+                favs += "</tr>";
+            })
+            let entries = "";
+            let inventory = "";
+            req.session.drinkInventory.forEach((ing) => {
+                inventory+=`<label class="drinkItem" for="${ing}">${ing}</label>
+                            <input type="checkbox" name="${ing}" class="remove">
+                            <br>`
+            })
+            // results.forEach(i => console.log(i));
+            res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favs, inventory: inventory});
+    })    
 })
 app.get('/error', (req,res)=>{
     res.render('error', {user: req.session.user})

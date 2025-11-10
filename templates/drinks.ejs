@@ -5,47 +5,55 @@
         <title>Drink Curator</title>
         <link rel="stylesheet" type="text/css" href="/tailwind.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        
     </head>
     <body class="bg-black md:w-screen h-screen">
         <%- include ('nav'); -%>
         <% if (user != 'guest') {%>
-           <main class="h-screen grid grid-rows-8">
-                <div class="bg-emerald-950 row-start-2 row-span-5 grid grid-rows-2 grid-cols-2 text-white">
-                    <div class ='flex flex-col m-5'>
-                        <h1 class="my-5">Favorite Drinks</h1>
-                        <div class="flex-grow bg-slate-800">
-                            <table id="recTable">
-                                <thead>
-                                    <tr>
-                                        <th>Drink Name</th>
-                                        <th>Recipe</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <%- favorites %>
-                                </tbody>
-                                <tfoot>
-        
-                                </tfoot>
-                            </table>
-        
+           <main class="h-screen flex flex-col">
+                <div class="h-1/7 flex-none w-screen bg-black"></div>
+                <div class="bg-emerald-950 h-4/5 flex flex-col text-white">
+                    <div class="h-full flex flex-row">
+                        <div class ='w-1/2 flex flex-col m-5'>
+                            <h1 class="my-5">Favorite Drinks</h1>
+                            <div class="h-full flex-grow bg-slate-800">
+                                <table id="recTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Drink Name</th>
+                                            <th>Recipe</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <%- favorites %>
+                                    </tbody>
+                                    <tfoot>
+            
+                                    </tfoot>
+                                </table>
+            
+                            </div>
+                        </div>
+                        <div class ='w-1/2 flex flex-col m-5'>
+                            <h1 class="my-5">Drink Inventory</h1>
+                            <div class='relative flex-grow bg-slate-800'>
+                                <form action="/addDrink" class="flex" method="post">
+                                    <!-- Have the submit button change from enter to remove when clicking boxes or entering info -->
+                                    <%- inventory %>
+                                    
+                                    <input class="absolute bottom-0 w-9/10 p-5 bg-white text-black h-1/5" id="myInput" type="text" name="ingredient" placeholder="Corn">
+                                    <input class="absolute right-0 bottom-0 p-5 w-1/10 h-1/5" type ='submit' value="submit" > 
+                                </form>
+                            </div>
                         </div>
                     </div>
-                    <div class ='flex flex-col m-5'>
-                        <h1 class="my-5">Drink Inventory</h1>
-                        <div class='relative flex-grow bg-slate-800'>
-                            <form action="remove" method="post">
-                                <%- inventory %>
-                                <input type ='submit' value="Remove" class="absolute inset-x-0 bottom-0"> 
-                            </form>
-                        </div>
-                    </div>
-                    <div class ='col-span-2 m-5 overflow-y-scroll'>
+                    
+                    <div class ='h-full col-span-2 m-5 overflow-y-scroll'>
                         <h1>Drink Finder</h1>
                         <form method="post" action = 'processFilters'>
                             <fieldset>
                                 <label for="category">Choose a Category</label>
-                                <select name="category">
+                                <select class="bg-gray-700" name="category">
                                     <%- categories %>
                                 </select>    
                             </fieldset>
@@ -70,12 +78,12 @@
                         </table>
                     </div>
                 </div>
-
+                <div class="h-1/7 flex-none w-screen bg-black"></div>
             </main>
         <%} else {%>
                 <%- include('error'); -%>
         <%}%>
 
     </body>
-    <script type="text/javascript" src="/favoriteToggle.js"></script>
+    <script src="/autoComplete.js"></script>
 </html>
