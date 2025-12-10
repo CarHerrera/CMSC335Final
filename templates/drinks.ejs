@@ -41,8 +41,8 @@
                                     <!-- Have the submit button change from enter to remove when clicking boxes or entering info -->
                                     <%- inventory %>
                                     
-                                    <input class="absolute bottom-0 w-9/10 p-5 bg-white text-black h-1/5" id="myInput" type="text" name="ingredient" placeholder="Corn">
-                                    <input class="absolute right-0 bottom-0 p-5 w-1/10 h-1/5" type ='submit' value="submit" > 
+                                    <input class="hidden absolute bottom-0 w-9/10 p-5 bg-white text-black h-1/5" id="myInput" type="text" name="ingredient" placeholder="Corn">
+                                    <input class="hidden absolute right-0 bottom-0 p-5 w-1/10 h-1/5" type ='submit' value="submit" > 
                                 </form>
                             </div>
                         </div>
@@ -59,10 +59,10 @@
                             </fieldset>
                             <br>
                             
-                            <input type="submit" value="submit">
+                            <button class="bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" type="submit" value="submit">Submit</button>
                         </form>
                         <br>
-                        <table id="" class="w-screen ">
+                        <table class="w-screen ">
                             <thead>
                                 <tr>
                                     <th class="w-2/3">Drink Name</th>
