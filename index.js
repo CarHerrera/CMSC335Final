@@ -12,7 +12,7 @@ const MONGO_DB_PW = process.env.MONGO_DB_PW;
 const MONGO_DB_NAME = process.env.MONGO_DB_DB;
 // const API_KEY_SPOON = process.env.API_KEY_SPOON;
 const COCKTAIL_DB = 'https://www.thecocktaildb.com/api/json/v1/1/';
-const COCK_CAT = {
+let categories = {
   "drinks": [
     {
       "strCategory": "Beer"
@@ -49,6 +49,7 @@ const COCK_CAT = {
     }
   ]
 };
+const COCK_CAT = categories.drinks.map(x => x.strCategory);
 
 // FINAL TODO: ADd more filters for the search. Should be multi ingredient and inventory search. 
 
@@ -61,7 +62,35 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+function generatePage(favorites, userInv, entries="", cat=""){
+    let options = "";
+    COCK_CAT.forEach(e => {
+        if (e == cat){
+            options+=`<option value="${e}" selected>${e}</option>`
+        } else {
+            options+=`<option value="${e}">${e}</option>`;
+        }
+    })  
+    let favs = "";
+    favorites.forEach(drink => {
+        let drinks = drink.drinks[0];
+        favs += `<tr><td>${drinks.strDrink}</td><td><a href="/drinks/${drinks.idDrink}">More Info</a></td></tr>`
+    })
+    let inventory = "";
+    userInv.forEach(ing => {
+        inventory+=`<div class="drinkInvBox">
+                        <label class="drinkItem" for="${ing}">${ing}</label>
+                        <input type="checkbox" name="${ing}" class="hiddenCheckBox">
+                    </div><br/>`
+    })
 
+    return {
+        table:entries,
+        categories: options,
+        userFavorites: favs,
+        userInventory: inventory
+    }
+}
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -244,33 +273,14 @@ app.get('/drinkRecipes',async (req,res) =>{
         await client.close();
     }
     // Using the favorites from the user, look them up with an API Call and add them to a list to be dealt with later
-    let temp = "";
     let promiseList = [];
     req.session.favorites.forEach(r => {
         promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
     })
-    promiseList.push((fetch (`${COCKTAIL_DB}list.php?c=list`).then(t => t.json())));
     Promise.all([...promiseList])
         .then(results => {
-            let categories = results.pop().drinks;
-            let options = "";
-            categories.forEach(e => {options+=`<option value="${e.strCategory}">${e.strCategory}</option>`;})   
-            let favs = "";
-            results.forEach(drink => {
-                favs += "<tr>"
-                let drinks = drink.drinks[0];
-                favs += `<td>${drinks.strDrink}</td><td><a href="/drinks/${drinks.idDrink}">More Info</a></td>`;
-                favs += "</tr>";
-            })
-            let entries = "";
-            let inventory = "";
-            req.session.drinkInventory.forEach((ing) => {
-                inventory+=`<label class="drinkItem" for="${ing}">${ing}</label>
-                            <input type="checkbox" name="${ing}" class="remove">
-                            <br>`
-            })
-            // results.forEach(i => console.log(i));
-            res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favs, inventory: inventory});
+            let page = generatePage(results, req.session.drinkInventory);
+            res.render('drinks', {user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
     })    
 });
 app.post('/remove', async (req,res) =>{
@@ -279,8 +289,9 @@ app.post('/remove', async (req,res) =>{
     req.session.favorites = [];        
     req.session.drinkInventory = [];
     req.session.save();
-    res.render('error', {user: req.session.user})
+        res.render('error', {user: req.session.user})
     }
+    // Inventory Item to remove 
     let result = Object.setPrototypeOf(req.body, Object.prototype);
     try {
         await client.connect();
@@ -299,29 +310,10 @@ app.post('/remove', async (req,res) =>{
     req.session.favorites.forEach(r => {
         promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
     })
-    promiseList.push((fetch (`${COCKTAIL_DB}list.php?c=list`).then(t => t.json())));
     Promise.all([...promiseList])
         .then(results => {
-            let categories = results.pop().drinks;
-            let options = "";
-            categories.forEach(e => {options+=`<option value="${e.strCategory}">${e.strCategory}</option>`;})   
-            let favs = "";
-            results.forEach(drink => {
-                favs += "<tr>"
-                let drinks = drink.drinks[0];
-                favs += `<td>${drinks.strDrink}</td><td><a href="/drinks/${drinks.idDrink}">More Info</a></td>`;
-                COCK_CAT.add(drinks.strDrink);
-                favs += "</tr>";
-            })
-            let entries = "";
-            let inventory = "";
-            req.session.drinkInventory.forEach((ing) => {
-                inventory+=`<label class="drinkItem" for="${ing}">${ing}</label>
-                            <input type="checkbox" name="${ing}" class="remove">
-                            <br>`
-            })
-            // results.forEach(i => console.log(i));
-            res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favs, inventory: inventory});
+            let page = generatePage(results, req.session.drinkInventory);
+            res.render('drinks', {user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
     })    
 })
 app.post('/processFilters', (req,res)=>{
@@ -341,22 +333,10 @@ app.post('/processFilters', (req,res)=>{
     // Category selected by the user
     let category = Object.setPrototypeOf(req.body, Object.prototype);
     promiseList.push(fetch(`${COCKTAIL_DB}${filter}${category.category}`).then(r => r.json()));
-    // Lookup the categories
-    promiseList.push((fetch (`${COCKTAIL_DB}list.php?c=list`).then(t => t.json())));
     Promise.all([...promiseList]).then(
         results => {
-            let categories = results.pop().drinks;
-            let options = "";
-            categories.forEach(e => {
-                if (e.strCategory == category.category){
-                    options+=`<option value="${e.strCategory}" selected>${e.strCategory}</option>`
-                } else {
-                    options+=`<option value="${e.strCategory}">${e.strCategory}</option>`;
-                }
-                
-            })   
-            let entries = "";
             let queryResults = results.pop().drinks;
+            let entries ="";
             let i = 0;
             queryResults.forEach(r => {
                 if (i %2 == 0){
@@ -367,19 +347,8 @@ app.post('/processFilters', (req,res)=>{
                 i++;
             })
             
-            
-            let favorites = ""
-            results.forEach(r => {
-                drink = r.drinks[0];
-                favorites +=  `<tr><td>${drink.strDrink}</td><td><a href="/drinks/${drink.idDrink}">More Info</a></td></tr>`;
-            })
-            let inventory = "";
-            req.session.drinkInventory.forEach((ing) => {
-                inventory+=`<label class="drinkItem" for="${ing}">${ing}</label>
-                            <input type="checkbox" name="${ing}" class="remove">
-                            <br>`
-            })
-            res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favorites, inventory:inventory});
+            let page = generatePage(results, req.session.drinkInventory, entries, category.category);
+            res.render('drinks', {user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
         }
     )
 
@@ -406,35 +375,14 @@ app.post('/addDrink', async (req,res) => {
     } finally{
         await client.close();
     }
-    
-    let temp = "";
     let promiseList = [];
     req.session.favorites.forEach(r => {
         promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
     })
-    promiseList.push((fetch (`${COCKTAIL_DB}list.php?c=list`).then(t => t.json())));
     Promise.all([...promiseList])
         .then(results => {
-            let categories = results.pop().drinks;
-            let options = "";
-            categories.forEach(e => {options+=`<option value="${e.strCategory}">${e.strCategory}</option>`;})   
-            let favs = "";
-            results.forEach(drink => {
-                favs += "<tr>"
-                let drinks = drink.drinks[0];
-                favs += `<td>${drinks.strDrink}</td><td><a href="/drinks/${drinks.idDrink}">More Info</a></td>`;
-                COCK_CAT.add(drinks.strDrink);
-                favs += "</tr>";
-            })
-            let entries = "";
-            let inventory = "";
-            req.session.drinkInventory.forEach((ing) => {
-                inventory+=`<label class="drinkItem" for="${ing}">${ing}</label>
-                            <input type="checkbox" name="${ing}" class="remove">
-                            <br>`
-            })
-            // results.forEach(i => console.log(i));
-            res.render('drinks', {user: req.session.user, entries:entries, categories:options, favorites: favs, inventory: inventory});
+            let page = generatePage(results, req.session.drinkInventory);
+            res.render('drinks', {user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
     })    
 })
 app.get('/error', (req,res)=>{
@@ -539,6 +487,37 @@ app.get('/profile/:id', (req,res) => {
     }
     // res.render('profile', {user: req.session.user})
     res.render('underConstruction', {user: req.session.user});
+})
+app.post('/addDrinkItem/:item', async (req,res)=> {
+    if(req.session.user == null){
+        req.session.user = 'guest';
+        req.session.favorites = [];
+        req.session.drinkInventory = [];
+        req.session.save();
+        res.render('error', {user: req.session.user})
+    }
+    let {item} = req.params;
+    try {
+        await client.connect();
+        let query = {_id: req.session.user}
+        let add = {$push: {'drinkProfile.inventory': item}}
+        r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,add);
+        req.session.drinkInventory.push(item);
+        console.log(`Application entry created with id ${r.id}`);
+    } catch (e){
+        console.log(e)
+    } finally{
+        await client.close();
+    }
+    let inventory = "";
+    req.session.drinkInventory.forEach(ing => {
+        inventory+=`<div class="drinkInvBox">
+                        <label class="drinkItem" for="${ing}">${ing}</label>
+                        <input type="checkbox" name="${ing}" class="hiddenCheckBox">
+                    </div><br/>`
+    })
+    console.log(inventory);
+    res.json(inventory);
 })
 app.post('/addFavoriteDrink/:id', async (req,res) => {
     if(req.session.user == null){

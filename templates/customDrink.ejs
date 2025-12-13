@@ -19,9 +19,9 @@
                         <h1 class="text-6xl"><%= drinkName %></h1>
                         <div class="flex-grow"></div>
                         <% if (fav == true) {%>
-                            <a class="fa fa-star checked" style="font-size:xx-large;margin-top:15px;" id="star" onclick=toggle( <%-id%> )></a>
+                            <a class="fa fa-star checked" style="font-size:xx-large;margin-top:15px;" id="star" onclick=toggle(<%-id-%>)></a>
                         <%} else {%>
-                            <a class="fa fa-star" style="font-size:xx-large;margin-top:15px;" id="star" onclick=toggle( <%-id%> )></a>
+                            <a class="fa fa-star" style="font-size:xx-large;margin-top:15px;" id="star" onclick=toggle(<%-id-%>)></a>
                         <%}%>
                         
                         <!-- href="/addFavoriteDrink/<%-id%>" -->

@@ -7,6 +7,7 @@ async function toggle(x){
         }
     })
     const data = await resp.json();
+    console.log(data);
     if(data.isFavorited){
         document.getElementById("star").className = "fa fa-star checked";
     } else {

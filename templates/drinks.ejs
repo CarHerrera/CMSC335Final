@@ -5,6 +5,7 @@
         <title>Drink Curator</title>
         <link rel="stylesheet" type="text/css" href="/tailwind.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <script src="/editInventory.js"></script>
         
     </head>
     <body class="bg-black md:w-screen h-screen">
@@ -37,15 +38,25 @@
                         <div class ='w-1/2 flex flex-col m-5'>
                             <h1 class="my-5">Drink Inventory</h1>
                             <div class='relative flex-grow bg-slate-800'>
-                                <form action="/addDrink" class="flex" method="post">
+                                <div id="inventoryManager" class="flex flex-col w-full" method="post">
                                     <!-- Have the submit button change from enter to remove when clicking boxes or entering info -->
                                     <%- inventory %>
-                                    
-                                    <input class="hidden absolute bottom-0 w-9/10 p-5 bg-white text-black h-1/5" id="myInput" type="text" name="ingredient" placeholder="Corn">
-                                    <input class="hidden absolute right-0 bottom-0 p-5 w-1/10 h-1/5" type ='submit' value="submit" > 
-                                </form>
+                                    <button id="backBtn" class="hidden absolute top-0 right-0 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(2,<%-cnt-%>) type="button">Back</button>
+                                    <input class="hidden absolute bottom-0 w-9/10 p-5 bg-white text-black h-1/5" id="myInput" type="text" name="ingredient" placeholder="Enter a drink like chocolate!">
+                                    <button id="submitItem"class="hidden bottom-0 right-0 w-1/10 absolute bg-blue-800 inset-ring-3 shadow-xl text-white p-3" type ='button' onclick=selectAction(4,<%-cnt-%>)> Submit </button>
+                                    <button id="addInven" class="absolute bottom-0 left-1/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(0,<%-cnt-%>) type="button">Add</button>
+                                    <button id="rmInven" class="absolute bottom-0 left-2/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(1,<%-cnt-%>) type="button">Remove</button>
+                                    <button id="backBtn2" class="hidden absolute bottom-0 left-1/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(3,<%-cnt-%>) type="button">Back</button>
+                                    <button id="rmInven2" class="hidden absolute bottom-0 left-2/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(5,<%-cnt-%>) type="button">Remove</button>
+                                </div>
+                                <div id="drinkAlert" class="hidden absolute -bottom-10 w-full p-3 bg-red-300">
+                                    <span class="absolute right-0" onclick="this.parentElement.style.display='none';">&times;X</span>
+                                    This is an alert box.
+                                </div>
                             </div>
+                            
                         </div>
+                        
                     </div>
                     
                     <div class ='h-full col-span-2 m-5 overflow-y-scroll'>
@@ -62,7 +73,7 @@
                             <button class="bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" type="submit" value="submit">Submit</button>
                         </form>
                         <br>
-                        <table class="w-screen ">
+                        <table class="w-full ">
                             <thead>
                                 <tr>
                                     <th class="w-2/3">Drink Name</th>
