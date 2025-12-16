@@ -7,7 +7,6 @@
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
-    --color-red-100: oklch(93.6% 0.032 17.717);
     --color-red-300: oklch(80.8% 0.114 19.571);
     --color-emerald-950: oklch(26.2% 0.051 172.552);
     --color-teal-600: oklch(60% 0.118 184.704);
@@ -521,6 +520,12 @@ table, th, td {
   .autocomplete-active {
     background-color: DodgerBlue !important;
     color: #ffffff;
+  }
+  .hiddenCheckBox {
+    visibility: hidden;
+  }
+  .drinkInvCBox {
+    padding-left: 1rem;
   }
 }
 * {

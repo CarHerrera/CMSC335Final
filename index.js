@@ -161,6 +161,7 @@ app.get('//', async (req,res) =>{
             req.session.user = app.user;
             req.session.favorites = app.favorites;
             req.session.drinkInventory = app.drinkProfile.inventory;
+            req.session.userId = r.insertedId;
             req.session.save();
         }
     } catch (e){
@@ -365,7 +366,7 @@ app.post('/addDrink', async (req,res) => {
     let item = Object.setPrototypeOf(req.body, Object.prototype);
     try {
         await client.connect();
-        let query = {_id: req.session.user}
+        let query = {_id: req.session.userId }
         let add = {$push: {'drinkProfile.inventory': item.ingredient}}
         r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,add);
         req.session.drinkInventory.push(item.ingredient);
@@ -399,7 +400,7 @@ app.get('/drinks/:id', async (req,res) =>{
     let id = req.params;
     try {
         await client.connect();
-        let query = {_id: req.session.user}
+        let query = {_id: req.session.userId }
         let recent = {$push: {'drinkProfile.recents': id.id}}
         r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,recent);
         console.log(`Application entry created with id ${r.id}`);
@@ -488,7 +489,7 @@ app.get('/profile/:id', (req,res) => {
     // res.render('profile', {user: req.session.user})
     res.render('underConstruction', {user: req.session.user});
 })
-app.post('/addDrinkItem/:item', async (req,res)=> {
+app.post('/removeDrinkItems/:items', async (req,res)=> {
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
@@ -496,14 +497,15 @@ app.post('/addDrinkItem/:item', async (req,res)=> {
         req.session.save();
         res.render('error', {user: req.session.user})
     }
-    let {item} = req.params;
+    let {items} = req.params;
+    let list = JSON.parse(items);
     try {
         await client.connect();
-        let query = {_id: req.session.user}
-        let add = {$push: {'drinkProfile.inventory': item}}
+        let query = {_id: req.session.userId }
+        let add = {$pull: {'drinkProfile.inventory': {$in :list}}}
         r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,add);
-        req.session.drinkInventory.push(item);
-        console.log(`Application entry created with id ${r.id}`);
+        req.session.drinkInventory = req.session.drinkInventory.filter(x => !list.includes(x));
+        console.log(`Removed items ${list} from ${r}`);
     } catch (e){
         console.log(e)
     } finally{
@@ -516,7 +518,39 @@ app.post('/addDrinkItem/:item', async (req,res)=> {
                         <input type="checkbox" name="${ing}" class="hiddenCheckBox">
                     </div><br/>`
     })
-    console.log(inventory);
+    res.json(inventory);
+})
+app.post('/addDrinkItem/:item', async (req,res)=> {
+    if(req.session.user == null){
+        req.session.user = 'guest';
+        req.session.favorites = [];
+        req.session.drinkInventory = [];
+        req.session.save();
+        res.render('error', {user: req.session.user})
+    }
+    let {item} = req.params;
+    if (!req.session.drinkInventory.includes(item)){
+        try {
+            await client.connect();
+            let query = {_id: req.session.userId}
+            let add = {$push: {'drinkProfile.inventory': item}}
+            r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,add);
+            req.session.drinkInventory.push(item);
+            console.log(`Application entry created with id ${r.id}`);
+        } catch (e){
+            console.log(e)
+        } finally{
+            await client.close();
+        }   
+    }
+
+    let inventory = "";
+    req.session.drinkInventory.forEach(ing => {
+        inventory+=`<div class="drinkInvBox">
+                        <label class="drinkItem" for="${ing}">${ing}</label>
+                        <input type="checkbox" name="${ing}" class="hiddenCheckBox">
+                    </div><br/>`
+    })
     res.json(inventory);
 })
 app.post('/addFavoriteDrink/:id', async (req,res) => {
@@ -532,7 +566,7 @@ app.post('/addFavoriteDrink/:id', async (req,res) => {
     let added = true;
     try {
         await client.connect();
-        const query = {user: req.session.user};
+        const query = {user: req.session.userId };
         let newFav = {$push: {'drinkProfile.favorites': id}};
         let removeFav = {$pull: {'drinkProfile.favorites': id}};
         // r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,newFav);

@@ -8,7 +8,7 @@ async function selectAction(action, cnt){
         document.getElementById("rmInven").style.visibility = 'hidden';
         // Display Checkboxes
         Array.from(document.getElementsByClassName("hiddenCheckBox")).forEach(box => 
-            box.setAttribute('class', 'drinkInvItem')
+            box.setAttribute('class', 'drinkInvCBox')
         );
         // Show the new buttons
         document.getElementById("backBtn2").classList.toggle('hidden');
@@ -29,14 +29,16 @@ async function selectAction(action, cnt){
         document.getElementById("myInput").classList.toggle('hidden');
         document.getElementById("backBtn").classList.toggle('hidden');
         document.getElementById("submitItem").classList.toggle('hidden');
+        // Back to default from remove
     } else if (action == 3) {
-        Array.from(document.getElementsByClassName("drinkInvItem")).forEach(box => 
+        Array.from(document.getElementsByClassName("drinkInvCBox")).forEach(box => 
             box.setAttribute('class', 'hiddenCheckBox')
         );
         document.getElementById("addInven").style.visibility = 'visible';
         document.getElementById("rmInven").style.visibility = 'visible';
         document.getElementById("backBtn2").classList.toggle('hidden');
         document.getElementById("rmInven2").classList.toggle('hidden');
+    // This is adding items when the add button is clicked
     } else if (action == 4){
         let x = document.getElementById("myInput").value;
         if (ingr.includes(x)) {
@@ -47,11 +49,12 @@ async function selectAction(action, cnt){
                 }
             })
             const data = await resp.json();
-            // const node = document.createElement("div");
+            const node = document.getElementById("drinkInventoryBox");
+            node.innerHTML = data;
             // node.setAttribute('class', 'drinkInvBox');
             // document.getElementById("inventoryManager")
         } else {
-            // Checks to see if it's visible already. if it is vis alreay then do nothing 
+            // Checks to see if the error alert is visible already. if it is vis alreay then do nothing 
             if(!document.getElementById("drinkAlert").classList.contains('hidden')){
                 
             } else {
@@ -64,6 +67,25 @@ async function selectAction(action, cnt){
         }
         
         
+    } else if (action == 5){
+        let inventory = document.querySelectorAll('.drinkInvCBox');
+        let toRemove = [];
+        inventory.forEach((item) => {
+            if(item.checked){
+                console.log(item);
+                toRemove.push(item.name)
+            }
+        })
+        const json = JSON.stringify(toRemove);
+        const resp = await fetch(`/removeDrinkItems/${json}`, {
+                method: "POST",
+                headers: {
+                    'Content-Type' : 'application/json'
+            }
+        })
+        const data = await resp.json();
+        const node = document.getElementById("drinkInventoryBox");
+        node.innerHTML = data;
     }
 
     

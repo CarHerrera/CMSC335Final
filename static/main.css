@@ -85,6 +85,12 @@ table, th, td{
         background-color: DodgerBlue !important;
         color: #ffffff;
     }
+    .hiddenCheckBox{
+        visibility: hidden;
+    }
+    .drinkInvCBox{
+        padding-left: 1rem;
+    }
 }
 
 * { box-sizing: border-box; }
