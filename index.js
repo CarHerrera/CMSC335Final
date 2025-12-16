@@ -232,7 +232,7 @@ app.get('/foodRecipes', async (req,res) => {
         req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
-        res.render('error', {user: req.session.user})
+return res.render('error', {user: req.session.user});
     }
     // res.render('food', {user: req.session.user, entries:"", categories:"", favorites: "", inventory: ""});
     res.render('underConstruction', {user: req.session.user});
@@ -243,7 +243,7 @@ app.post('/processMealFilter', (req,res) =>{
         req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
-        res.render('error', {user: req.session.user})
+return res.render('error', {user: req.session.user});
     }
     fetch(`https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY_SPOON}&`).then(
         r => {
@@ -261,7 +261,7 @@ app.get('/drinkRecipes',async (req,res) =>{
         req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
-        res.render('error', {user: req.session.user})
+return res.render('error', {user: req.session.user});
     }
     let r;
     // Connect to DB and look up user 
@@ -290,7 +290,7 @@ app.post('/remove', async (req,res) =>{
     req.session.favorites = [];        
     req.session.drinkInventory = [];
     req.session.save();
-        res.render('error', {user: req.session.user})
+return res.render('error', {user: req.session.user});
     }
     // Inventory Item to remove 
     let result = Object.setPrototypeOf(req.body, Object.prototype);
@@ -323,13 +323,13 @@ app.post('/processFilters', (req,res)=>{
         req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
-        res.render('error', {user: req.session.user})
+return res.render('error', {user: req.session.user});
     }
     // Favorite look ups
     let filter = "filter.php?c=";
     let promiseList = [];
     req.session.favorites.forEach(r => {
-        promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
+        promiseList.push(fetch(`${COCKTAIL_DB}lookup.php?i=${r}`).then(t => t.json()));
     })
     // Category selected by the user
     let category = Object.setPrototypeOf(req.body, Object.prototype);
@@ -355,13 +355,57 @@ app.post('/processFilters', (req,res)=>{
 
 
 })
+app.post('/processInventory', (req, res) => {
+    if(req.session.user == null){
+        req.session.user = 'guest';
+        req.session.favorites = [];
+        req.session.drinkInventory = [];
+        req.session.save();
+        return res.render('error', {user: req.session.user});
+    }
+    // Favorite look ups
+    let filter = "filter.php?i=";
+    let promiseList = [];
+    req.session.drinkInventory.forEach( i => {
+        i = i.replace(/ /g, "_");
+        promiseList.push(fetch(`${COCKTAIL_DB}${filter}${i}`).then(r => r.json()));
+        console.log(`${COCKTAIL_DB}${filter}${i}`);
+    })
+    req.session.favorites.forEach(r => {
+        promiseList.push(fetch(`${COCKTAIL_DB}lookup.php?i=${r}`).then(t => t.json()));
+    })
+    Promise.all([...promiseList]).then(
+        results => {
+            let favs = [];
+            for(let i =0 ; i<req.session.favorites.length;i++){
+                favs.push(results.pop());
+            }
+            let entries ="";
+            i = 0;
+            results.forEach(r =>{
+                let drinkResults = r.drinks;
+                drinkResults.forEach(e =>{
+                    if (i %2 == 0){
+                        entries += `<tr class="bg-teal-600"><td>${e.strDrink}</td> <td><a href="/drinks/${e.idDrink}">Info Link</a></td></tr>`;
+                    } else {
+                        entries += `<tr class="bg-violet-600"><td>${e.strDrink}</td> <td><a href="/drinks/${e.idDrink}">Info Link</a></td></tr>`;
+                    }
+                    i++;
+                })
+            })
+            let page = generatePage(favs, req.session.drinkInventory, entries=entries);
+            return  res.render('drinks', {user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
+        }
+    )
+
+})
 app.post('/addDrink', async (req,res) => {
     if(req.session.user == null){
         req.session.user = 'guest';
         req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
-        res.render('error', {user: req.session.user})
+return res.render('error', {user: req.session.user});
     }
     let item = Object.setPrototypeOf(req.body, Object.prototype);
     try {
@@ -387,7 +431,7 @@ app.post('/addDrink', async (req,res) => {
     })    
 })
 app.get('/error', (req,res)=>{
-    res.render('error', {user: req.session.user})
+return res.render('error', {user: req.session.user});
 })
 app.get('/drinks/:id', async (req,res) =>{
     if(req.session.user == null){
@@ -395,7 +439,7 @@ app.get('/drinks/:id', async (req,res) =>{
         req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
-        res.render('error', {user: req.session.user})
+return res.render('error', {user: req.session.user});
     }
     let id = req.params;
     try {
@@ -484,7 +528,7 @@ app.get('/profile/:id', (req,res) => {
         req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
-        res.render('error', {user: req.session.user})
+return res.render('error', {user: req.session.user});
     }
     // res.render('profile', {user: req.session.user})
     res.render('underConstruction', {user: req.session.user});
@@ -495,7 +539,7 @@ app.post('/removeDrinkItems/:items', async (req,res)=> {
         req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
-        res.render('error', {user: req.session.user})
+return res.render('error', {user: req.session.user});
     }
     let {items} = req.params;
     let list = JSON.parse(items);
@@ -526,7 +570,7 @@ app.post('/addDrinkItem/:item', async (req,res)=> {
         req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
-        res.render('error', {user: req.session.user})
+return res.render('error', {user: req.session.user});
     }
     let {item} = req.params;
     if (!req.session.drinkInventory.includes(item)){
@@ -542,6 +586,11 @@ app.post('/addDrinkItem/:item', async (req,res)=> {
         } finally{
             await client.close();
         }   
+    } else {
+        return res.json({
+            success : -1,
+            data: ""
+        });
     }
 
     let inventory = "";
@@ -551,7 +600,10 @@ app.post('/addDrinkItem/:item', async (req,res)=> {
                         <input type="checkbox" name="${ing}" class="hiddenCheckBox">
                     </div><br/>`
     })
-    res.json(inventory);
+    return res.json({
+        success : 200,
+        data: inventory
+    });
 })
 app.post('/addFavoriteDrink/:id', async (req,res) => {
     if(req.session.user == null){
@@ -559,14 +611,14 @@ app.post('/addFavoriteDrink/:id', async (req,res) => {
         req.session.favorites = [];
         req.session.drinkInventory = [];
         req.session.save();
-        res.render('error', {user: req.session.user})
+return res.render('error', {user: req.session.user});
     }
     let {id} = req.params;
     // console.log();
     let added = true;
     try {
         await client.connect();
-        const query = {user: req.session.userId };
+        const query = {_id: req.session.userId };
         let newFav = {$push: {'drinkProfile.favorites': id}};
         let removeFav = {$pull: {'drinkProfile.favorites': id}};
         // r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,newFav);

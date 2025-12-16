@@ -49,10 +49,14 @@ async function selectAction(action, cnt){
                 }
             })
             const data = await resp.json();
-            const node = document.getElementById("drinkInventoryBox");
-            node.innerHTML = data;
-            // node.setAttribute('class', 'drinkInvBox');
-            // document.getElementById("inventoryManager")
+            if(data.success == 200){
+                const node = document.getElementById("drinkInventoryBox");
+                node.innerHTML = data.data;    
+            } else if (data.success == -1){
+                document.getElementById("drinkAlert").classList.toggle('hidden');
+                document.getElementById("drinkAlert").innerHTML = `<span class="absolute right-0" onclick="this.parentElement.style.display='none';">&times;</span>
+                                    ${x} was already found in your inventory. No duplicates are allowed.`;
+            }
         } else {
             // Checks to see if the error alert is visible already. if it is vis alreay then do nothing 
             if(!document.getElementById("drinkAlert").classList.contains('hidden')){

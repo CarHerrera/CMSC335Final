@@ -62,18 +62,31 @@
                     </div>
                     
                     <div class ='h-full col-span-2 m-5 overflow-y-scroll'>
-                        <h1>Drink Finder</h1>
-                        <form method="post" action = 'processFilters'>
-                            <fieldset>
-                                <label for="category">Choose a Category</label>
-                                <select class="bg-gray-700" name="category">
-                                    <%- categories %>
-                                </select>    
-                            </fieldset>
-                            <br>
+                        <h1 class="text-center text-xl  ">Drink Finder</h1>
+                        <div class = "flex justify-evenly">
+                            <form method="post" action = 'processFilters'>
+                                <fieldset>
+                                    <label for="category">Choose a Category</label>
+                                    <select class="bg-gray-700" name="category">
+                                        <%- categories %>
+                                    </select>    
+                                </fieldset>
+                                <br>
+                                
+                                <button class="bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" type="submit" value="submit">Submit Category Search</button>
+                            </form>
                             
-                            <button class="bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" type="submit" value="submit">Submit</button>
-                        </form>
+                            <form class ="" method="post" action = 'processInventory'>
+                                <fieldset>
+                                    <label for="category">Search based off of your inventory!</label>
+                                    
+                                </fieldset>
+                                <br>
+                                
+                                <button class="bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" type="submit" value="submit">Submit Inventroy Search</button>
+                            </form>
+                        </div>
+                        
                         <br>
                         <table class="w-full ">
                             <thead>
