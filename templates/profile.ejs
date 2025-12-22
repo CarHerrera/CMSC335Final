@@ -4,19 +4,41 @@
         <meta charset="utf-8">
         <title>Recipe Generator</title>
         <link rel="stylesheet" type="text/css" href="/tailwind.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <script src="/favoriteToggle.js"></script>
+        <script src="/changeVisName.js"></script>
     </head>
     <body class="bg-black md:w-screen h-screen">
         <%- include('nav'); -%>
         <% if (user != 'guest') {%>
-            <main class="h-screen grid grid-rows-8">
-                <div class="bg-emerald-950 row-start-2 row-span-5 text-white">
-                <form autocomplete="off" action="/addItem" method="post">
-                    <div class="autocomplete" style="width:100%;">
-                      <input class="w-screen" id="myInput" type="text" name="ingredient" placeholder="Corn">
+           <main class="h-screen flex flex-col">
+                <div class="h-1/7 flex-none w-screen bg-black"></div>
+                <div class="bg-emerald-950 h-4/5 flex flex-col text-white">
+                    <h1 id ="helloText" class="text-center text-5xl text-white pt-10">
+                        Hello <%- user -%>!
+                    </H1>
+                    <br>
+                    <h1 class="text-center text-2xl text-white pt-10">
+                        This is your profile! You can make some changes. See below!
+                    </H1>
+                    
+                    <div class="flex flex-col">
+                        <div class="flex flex-row justify-center pt-[2rem]">
+                            <h2 class="text-lg">Change your username!:</h2>
+                            <input class="bg-white text-black">
+                            <button class="inset-ring-3 text-white p-3 bg-blue-800 rounded-full" onclick=changeName()>Submit</button>
+                        </div>
+                        <div class="flex flex-row justify-center pt-[2rem]">
+                            
+                            <div id="drinkInventoryBox" class="p-5 overflow-y-auto flex flex-col">
+                                <h2 class="text-lg">Quickly remove some of your favorites!</h2>
+                                <%- favorites %>
+                            </div>
+                            
+                        </div>
                     </div>
-                    <input type="submit">
-                  </form>
-            </div>
+                </div>
+                <div class="h-1/7 flex-none w-screen bg-black"></div>
             </main>
         <%} else {%>
                 <%- include('error'); -%>

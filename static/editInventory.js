@@ -54,7 +54,7 @@ async function selectAction(action, cnt){
                 node.innerHTML = data.data;    
             } else if (data.success == -1){
                 document.getElementById("drinkAlert").classList.toggle('hidden');
-                document.getElementById("drinkAlert").innerHTML = `<span class="absolute right-0" onclick="this.parentElement.style.display='none';">&times;</span>
+                document.getElementById("drinkAlert").innerHTML = `<span class="absolute right-3" onclick="this.parentElement.style.display='none';">&times;</span>
                                     ${x} was already found in your inventory. No duplicates are allowed.`;
             }
         } else {
@@ -63,14 +63,14 @@ async function selectAction(action, cnt){
                 
             } else {
                 document.getElementById("drinkAlert").classList.toggle('hidden');
-                document.getElementById("drinkAlert").innerHTML = `<span class="absolute right-0" onclick="this.parentElement.style.display='none';">&times;</span>
+                document.getElementById("drinkAlert").innerHTML = `<span class="absolute right-3" onclick="this.parentElement.style.display='none';">&times;</span>
                                     ${x} was not found or is not a valid item. Please enter something else `;
             }
             
             // setTimeout(()=>document.getElementById("drinkAlert").classList.toggle('hidden'), 7000)
         }
         
-        
+    // Removing items from the inventory
     } else if (action == 5){
         let inventory = document.querySelectorAll('.drinkInvCBox');
         let toRemove = [];
@@ -90,6 +90,7 @@ async function selectAction(action, cnt){
         const data = await resp.json();
         const node = document.getElementById("drinkInventoryBox");
         node.innerHTML = data;
+        selectAction(3,cnt-toRemove.length);
     }
 
     

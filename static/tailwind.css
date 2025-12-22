@@ -7,7 +7,7 @@
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
-    --color-red-300: oklch(80.8% 0.114 19.571);
+    --color-red-600: oklch(57.7% 0.245 27.325);
     --color-emerald-950: oklch(26.2% 0.051 172.552);
     --color-teal-600: oklch(60% 0.118 184.704);
     --color-blue-800: oklch(42.4% 0.199 265.638);
@@ -18,6 +18,8 @@
     --color-white: #fff;
     --spacing: 0.25rem;
     --container-xl: 36rem;
+    --text-lg: 1.125rem;
+    --text-lg--line-height: calc(1.75 / 1.125);
     --text-xl: 1.25rem;
     --text-xl--line-height: calc(1.75 / 1.25);
     --text-2xl: 1.5rem;
@@ -200,14 +202,17 @@
   .inset-x-0 {
     inset-inline: calc(var(--spacing) * 0);
   }
-  .top-0 {
-    top: calc(var(--spacing) * 0);
-  }
   .top-1\/3 {
     top: calc(1/3 * 100%);
   }
+  .top-3 {
+    top: calc(var(--spacing) * 3);
+  }
   .right-0 {
     right: calc(var(--spacing) * 0);
+  }
+  .right-3 {
+    right: calc(var(--spacing) * 3);
   }
   .-bottom-10 {
     bottom: calc(var(--spacing) * -10);
@@ -217,6 +222,9 @@
   }
   .bottom-1\/8 {
     bottom: calc(1/8 * 100%);
+  }
+  .bottom-4 {
+    bottom: calc(var(--spacing) * 4);
   }
   .left-1\/2 {
     left: calc(1/2 * 100%);
@@ -280,6 +288,12 @@
   }
   .h-screen {
     height: 100vh;
+  }
+  .max-h-1\/2 {
+    max-height: calc(1/2 * 100%);
+  }
+  .max-h-4\/5 {
+    max-height: calc(4/5 * 100%);
   }
   .w-1\/2 {
     width: calc(1/2 * 100%);
@@ -352,15 +366,25 @@
   .gap-8 {
     gap: calc(var(--spacing) * 8);
   }
+  .overflow-y-auto {
+    overflow-y: auto;
+  }
   .overflow-y-scroll {
     overflow-y: scroll;
   }
   .rounded-full {
     border-radius: calc(infinity * 1px);
   }
+  .border {
+    border-style: var(--tw-border-style);
+    border-width: 1px;
+  }
   .border-2 {
     border-style: var(--tw-border-style);
     border-width: 2px;
+  }
+  .border-white {
+    border-color: var(--color-white);
   }
   .bg-black {
     background-color: var(--color-black);
@@ -374,8 +398,8 @@
   .bg-gray-700 {
     background-color: var(--color-gray-700);
   }
-  .bg-red-300 {
-    background-color: var(--color-red-300);
+  .bg-red-600 {
+    background-color: var(--color-red-600);
   }
   .bg-slate-800 {
     background-color: var(--color-slate-800);
@@ -404,6 +428,9 @@
   .pt-10 {
     padding-top: calc(var(--spacing) * 10);
   }
+  .pt-\[2rem\] {
+    padding-top: 2rem;
+  }
   .text-center {
     text-align: center;
   }
@@ -422,6 +449,10 @@
   .text-6xl {
     font-size: var(--text-6xl);
     line-height: var(--tw-leading, var(--text-6xl--line-height));
+  }
+  .text-lg {
+    font-size: var(--text-lg);
+    line-height: var(--tw-leading, var(--text-lg--line-height));
   }
   .text-xl {
     font-size: var(--text-xl);
@@ -465,34 +496,10 @@
   --width: 100vmax;
   --color-gray-700: oklch(37.3% 0.034 259.733);
 }
-#recTable {
-  width: 100%;
-  background-color: var(--green);
-}
-.recommended {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-.drinkList {
-  list-style-type: none;
-  padding: 0;
-  margin: 10px;
-}
-.drinkList li {
-  position: relative;
-}
-.drinkItem:hover {
-  background-color: var(--white);
-}
-.remove:hover {
-  background-color: var(--red);
-}
-table, th, td {
-  border: 2px solid var(--black);
+th, td {
+  border: 2px solid;
   border-collapse: collapse;
+  padding: 10px;
 }
 .fa:hover {
   color: orange;
@@ -529,6 +536,9 @@ table, th, td {
   }
   .drinkInvCBox {
     padding-left: 1rem;
+  }
+  .drinkItem {
+    font-size: larger;
   }
 }
 * {

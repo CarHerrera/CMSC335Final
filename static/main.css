@@ -12,45 +12,16 @@
 
 
 
-/* ACCOUNTS */
 
 
 
 
 
-#recTable{
-    width:100%;
-    background-color: var(--green);
-}
 
-.recommended{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    width:100%;
-}
-
-
-.drinkList{
-    list-style-type: none;
-    padding:0;
-    margin: 10px;
-}
-.drinkList li{
-    position:relative;
-}
-
-.drinkItem:hover{
-    background-color: var(--white);
-}
-.remove:hover{
-    background-color: var(--red);
-}
-
-table, th, td{
-    border: 2px solid var(--black);
+ th, td{
+    border: 2px solid;
     border-collapse: collapse;
+    padding: 10px;
 }
 .fa:hover{
     color: orange;
@@ -90,6 +61,10 @@ table, th, td{
     }
     .drinkInvCBox{
         padding-left: 1rem;
+        
+    }
+    .drinkItem{
+        font-size: larger;
     }
 }
 
