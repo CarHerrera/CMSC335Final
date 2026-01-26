@@ -9,43 +9,59 @@
     <body class="bg-black md:w-screen h-screen">
         <%- include ('nav'); -%>
         <% if (user != 'guest') {%>
-            <main class="h-screen grid grid-rows-8">
-                <div class="bg-emerald-950 row-start-2 row-span-5 grid grid-cols-2  text-white">
-                    <div class ='flex flex-col m-5'>
-                        <h1 class="my-5">Favorite Meal</h1>
-                        <div class="flex-grow bg-slate-800">
-                            <table id="recTable">
-                                <thead>
-                                    <tr>
-                                        <th>Meal Name</th>
-                                        <th>Recipe</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <%- favorites %>
-                                </tbody>
-                                <tfoot>
-        
-                                </tfoot>
-                            </table>
-        
+            <main class="h-screen flex flex-col">
+                <div class="h-1/7 flex-none w-screen bg-black"></div>
+                <div class="bg-emerald-950 h-4/5 flex flex-col text-white">
+                    <div class="max-h-1/2 h-full flex flex-row">
+                        <div class ='w-1/2 flex flex-col m-5'>
+                            <h1 class="my-5">Favorite Meal</h1>
+                            <div class="h-full border shadow-xl bg-slate-800 overflow-y-auto">
+                                <table class="w-full border">
+                                    <thead class="p-3">
+                                        <tr class="border">
+                                            <th>Meal Name</th>
+                                            <th>Recipe</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <%- favorites %>
+                                    </tbody>
+                                    <tfoot>
+            
+                                    </tfoot>
+                                </table>
+            
+                            </div>
+                        </div>
+                        <div class ='w-1/2 flex flex-col m-5'>
+                            <h1 class="my-5">Meal Inventory</h1>
+                                <div class='h-full border shadow-xl relative bg-slate-800'>
+                                <div id="inventoryManager" class="flex flex-col w-full h-full" method="post">
+                                    <!-- Have the submit button change from enter to remove when clicking boxes or entering info -->
+                                     <div id="drinkInventoryBox" class="p-5 max-h-4/5 overflow-y-auto">
+                                        <%- inventory %>
+                                     </div>
+                                    <button id="backBtn" class="hidden absolute top-3 right-3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(2,<%-cnt-%>) type="button">Back</button>
+                                    <input class="hidden absolute bottom-0 w-9/10 p-5 bg-white text-black h-1/5" id="myInput" type="text" name="ingredient" placeholder="Enter a drink like chocolate!">
+                                    <button id="submitItem"class="hidden bottom-0 right-0 w-1/10 absolute h-1/5 bg-blue-800 inset-ring-3 shadow-xl text-white p-3" type ='button' onclick=selectAction(4,<%-cnt-%>)> Submit </button>
+                                    <button id="addInven" class="absolute bottom-4 left-1/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(0,<%-cnt-%>) type="button">Add</button>
+                                    <button id="rmInven" class="absolute bottom-4 left-2/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(1,<%-cnt-%>) type="button">Remove</button>
+                                    <button id="backBtn2" class="hidden absolute bottom-4 left-1/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(3,<%-cnt-%>) type="button">Back</button>
+                                    <button id="rmInven2" class="hidden absolute bottom-4 left-2/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(5,<%-cnt-%>) type="button">Remove</button>
+                                </div>
+                                <div id="drinkAlert" class="hidden absolute -bottom-10 w-full p-3 bg-red-600">
+                                    <span class="absolute right-3 text-xl" onclick="this.parentElement.style.display='none';">&times;X</span>
+                                    This is an alert box.
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class ='flex flex-col m-5'>
-                        <h1 class="my-5">Meal Inventory</h1>
-                        <div class='relative flex-grow bg-slate-800'>
-                            <form action="remove" method="post">
-                                <%- inventory %>
-                                <input type ='submit' value="Remove" class="absolute inset-x-0 bottom-0"> 
-                            </form>
-                        </div>
-                    </div>
-                    <div class ='col-span-2 m-5'>
-                        <h1>Meal Finder</h1>
-                        <form method="post" action = 'processMealFilter'>
+                    <div class ='relative h-full col-span-2 m-5 overflow-y-scroll'>
+                        <h1 class="text-center text-xl">Meal Finder</h1>
+                        <form class="my-10 w-full" method="post" action = 'processMealFilter'>
                             <fieldset>
                                 <label for="category">Choose a Category</label> 
-                                <select name ='category' required>
+                                <select class="bg-gray-700" name ='category' required>
                                     <option value="None" selected>None</option>
                                     <option value="Asian">Asian</option>
                                     <option value="American">American</option>
@@ -61,14 +77,14 @@
                                     <option value="Korean">Korean</option> 
                                 </select>
                                 <label for="maxCal">Max Calories</label>
-                                <input type="number" name="maxCal" min="50" max = '800'>
+                                <input class="bg-gray-700" type="number" name="maxCal" min="50" max = '800'>
                                 <label for="maxSer">Max Servings</label>
-                                <input type="number" name="maxSer" min="1" max = '8'>
+                                <input class="bg-gray-700" type="number" name="maxSer" min="1" max = '8'>
                                 <label for="maxSug">Max Sugar</label>
-                                <input type="number" name="maxSug" min="1" max = '100'>
-                                <label for="allergies">Allergies: </label>
-                                <select name="allergies" multiple>
-                                    <option value="Wheat" selected>None</option>
+                                <input class="bg-gray-700" type="number" name="maxSug" min="1" max = '100'>
+                                <label class="mb-2.5" for="allergies">Allergies: </label>
+                                <select size="2" class="absolute w-50 bg-gray-700 border rounded-base px-3 py-2.5 shadow-xs" name="allergies" multiple>
+                                    <option value="None" selected>None</option>
                                     <option value="Dairy">Dairy</option>
                                     <option value="Egg">Egg</option>
                                     <option value="Gluten">Gluten</option>
@@ -88,7 +104,7 @@
                             <input type="submit" value="submit">
                         </form>
                         <br>
-                        <table class="w-screen">
+                        <table class="w-full bg-slate-800 border border-white">
                             <thead>
                                 <tr>
                                     <th class="w-2/3">Meal Name</th>
@@ -104,7 +120,7 @@
                         </table>
                     </div>
                 </div>
-
+                <div class="h-1/7 flex-none w-screen bg-black"></div>
             </main>
         <%} else {%>
                 <%- include('error'); -%>

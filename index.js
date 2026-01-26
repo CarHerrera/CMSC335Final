@@ -10,8 +10,9 @@ require("dotenv").config({path: path.resolve(__dirname, '.env')});
 const MONGO_DB_USER = process.env.MONGO_DB_USER;
 const MONGO_DB_PW = process.env.MONGO_DB_PW;
 const MONGO_DB_NAME = process.env.MONGO_DB_DB;
-// const API_KEY_SPOON = process.env.API_KEY_SPOON;
+const API_KEY_SPOON = process.env.SPOON_API;
 const COCKTAIL_DB = 'https://www.thecocktaildb.com/api/json/v1/1/';
+const SPOON_URL = `https://api.spoonacular.com/`;
 let categories = {
   "drinks": [
     {
@@ -107,7 +108,7 @@ run().catch(console.dir);
 
 
 
-let port = 8000;
+let port = 3100;
 
 
 app.set("views", path.resolve(__dirname, "templates")); 
@@ -122,9 +123,8 @@ app.use(
     })
 );
 
-/* Site pages */
-app.get('//', async (req,res) =>{
-    let app = {
+const newUser = async function(req, res, next){
+   let app = {
         _id:"",
         user: "", 
         pword:"", 
@@ -139,16 +139,10 @@ app.get('//', async (req,res) =>{
         foodProfile:{
             favorites:[], 
             recents:[], 
-            inventory:[]},
-        favorites: [],
-    };
-    let guestId;
+            inventory:[]
+        },
+    }; 
     try {
-        
-        // req.session.user = app.user;
-        // req.session.favorites = app.favorites;
-        // req.session.drinkInventory = app.drinkProfile.inventory;
-        // req.session.save();
         if(req.session.user == null){
             await client.connect();
             let db = await client.db(MONGO_DB_NAME).collection('guests');
@@ -159,9 +153,12 @@ app.get('//', async (req,res) =>{
             console.log(`${count}`);
             console.log(`Application entry created with id ${r.insertedId}`);
             req.session.user = app.user;
-            req.session.favorites = app.favorites;
+            req.session.drinkFavorites = app.drinkProfile.favorites;
+            req.session.foodFavorites = app.foodProfile.favorites;
             req.session.drinkInventory = app.drinkProfile.inventory;
+            req.session.foodInventory = app.foodProfile.inventory;
             req.session.userId = r.insertedId;
+            req.session.lastMeal = null;
             req.session.save();
         }
     } catch (e){
@@ -169,19 +166,49 @@ app.get('//', async (req,res) =>{
     } finally{
         await client.close();
     }  
+    next();
+};
+
+// const cacheMeal = async function (req, res, next){
+//     console.log("In the cachE");
+//     console.log(req.session.lastMeal);
+//     if(req.session.lastMeal != null){
+//         try{
+//             const meal  =  req.session.lastMeal;
+//             await client.connect();
+//             let db = await client.db(MONGO_DB_NAME).collection('CachedMeals'); 
+//             let found = db.findOne({"_id": meal._id});
+//             if(found == null){
+//                 let r = db.insertOne(meal);
+//                 console.log(`Application entry created with id ${r.insertedId}`);
+//             }
+//         } catch (e){
+//             console.log(e)
+//         } finally{
+//             await client.close();
+//         } 
+//     }
+//     req.session.lastMeal = null;
+//     next();
+// }
+app.use(newUser);
+// app.use(cacheMeal);
+/* Site pages */
+app.get('//', (req,res) =>{
+    req.newUser
     
-    
-    return res.render('home',{user: req.session.user});
+    const userURI = encodeURI(req.session.user);
+    return res.render('home',{userURI: userURI, user: req.session.user});
 })
 
 app.get('/account', (req,res) => {
     if(req.session.user == null){
-        req.session.user = 'guest';
-        req.session.favorites = [];
-        req.session.drinkInventory = [];
-        req.session.save();
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
     }
-    return res.render('account', {user:req.session.user, error:""});
+    const userURI = encodeURI(req.session.user);
+    return res.render('account', {userURI: userURI, user:req.session.user, error:""});
 })
 
 app.post('/login', async (req,res) => {
@@ -197,18 +224,21 @@ app.post('/login', async (req,res) => {
     }
     if(r){
         req.session.user = r.user;
-        req.session.favorites = r.drinkProfile.favorites;
+        req.session.drinkFavorites = r.drinkProfile.favorites;
         req.session.drinkInventory = r.drinkProfile.inventory;
         req.session.save();
-        // console.log(req.session.favorites);
-        return res.render('home', {user: req.session.user})
+        // console.log(req.session.drinkFavorites);
+        const userURI = encodeURI(req.session.user);
+        return res.render('home', {userURI: userURI, user: req.session.user})
     } else {
-        return res.render('account',{user:req.session.user, error:"Password/Username was not correct"});
+        const userURI = encodeURI(req.session.user);
+        return res.render('account',{userURI: userURI, user:req.session.user, error:"Password/Username was not correct"});
     }
 })
 app.post('/signup', async (req,res) => {
     let {username, pword, age, allergies} = req.body;
-    let app = {_id:username, user: username, pword:pword, age:age, allergies: allergies, 
+    // const userURI = encodeURI(req.session.user);
+    let app = {_id:username, userURI: userURI, user: username, pword:pword, age:age, allergies: allergies, 
         drinkProfile:{ favorites:[], recents:[], inventory:[]}, 
         foodProfile:{favorites:[], recents:[], inventory:[]},};
     try {
@@ -223,45 +253,195 @@ app.post('/signup', async (req,res) => {
         await client.close();
     }
     
-    return res.render('home', {user: username, entries:""});
+    const userURI = encodeURI(req.session.user);
+    return res.render('home', {userURI: userURI, user: username, entries:""});
 })
 
 app.get('/foodRecipes', async (req,res) => {
     if(req.session.user == null){
-        req.session.user = 'guest';
-        req.session.favorites = [];
-        req.session.drinkInventory = [];
-        req.session.save();
-    return res.render('error', {user: req.session.user});
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
     }
-    // res.render('food', {user: req.session.user, entries:"", categories:"", favorites: "", inventory: ""});
-    return res.render('underConstruction', {user: req.session.user});
+    const userURI = encodeURI(req.session.user);
+    let favorites = "";
+    req.session.foodFavorites.forEach((meal) => {
+        favorites+= `<tr><td>${meal.name}</td><td><a href="/meals/${meal.id}">More Info</a></td></tr>`;
+    })
+    return res.render('food', {userURI: userURI, user: req.session.user, entries:"", categories:"", favorites: favorites, inventory: "", cnt: req.session.foodInventory.length});
+
+    // return res.render('underConstruction', {userURI: userURI, user: req.session.user});
 });
 app.post('/processMealFilter', (req,res) =>{
     if(req.session.user == null){
-        req.session.user = 'guest';
-        req.session.favorites = [];
-        req.session.drinkInventory = [];
-        req.session.save();
-        return res.render('error', {user: req.session.user});
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
     }
-    fetch(`https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY_SPOON}&`).then(
+    const {category, maxCal, maxSer, maxSug, allergies} = req.body;
+    let query = ""
+    if(category != ""){
+        query = query.concat(`&category=${category}`)
+    }
+    if(maxCal != ""){
+        query =  query.concat(`&maxCalories=${maxCal}`)
+    }
+    if(maxSer != ""){
+        query = query.concat(`&maxServings=${maxSer}`)
+    } 
+    if(maxSug != ""){
+        query = query.concat(`&maxSugar=${maxSug}`)
+    } 
+    if(allergies != "None"){
+        if (Array.isArray(allergies)){
+            query = query.concat(`&intolerances=${allergies.join(",")}`);
+        } else {
+            query = query.concat(`&intolerances=${allergies}`);
+        }
+    }
+    let favorites = "";
+    req.session.foodFavorites.forEach((meal) => {
+        favorites+= `<tr><td>${meal.name}</td><td><a href="/meals/${meal.id}">More Info</a></td></tr>`;
+    })
+    fetch(`https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY_SPOON}${query}&number=50`).then(
         r => {
-            r.json();
+           return r.json();
         }).then(r =>{
-            console.log(r);
+            // console.log(r);
+            let meals = r.results;
+            let entries = "";
+            meals.forEach(meal => {
+                entries += `<tr><td>${meal.title}</td> <td><a href="/meals/${meal.id}">Info Link</a></td></tr>`;        
+            })
+            const userURI = encodeURI(req.session.user);
+            
+            return res.render('food', {userURI: userURI, user: req.session.user, entries:entries, categories:"", favorites: favorites, inventory: "", cnt: req.session.foodInventory.length});
         })
-    
+        // console.log(req.body);
+        // console.log(query);
 })
+app.get('/meals/:id',  async (req,res) => {
+    if(req.session.user == null){
+        req.newUser
+        return res.render('error', {userURI: userURI, user: req.session.user});
+    }
+    const userURI = encodeURI(req.session.user);
+    let {id} = req.params;
+    let fav = false;        
+    req.session.foodFavorites.forEach((x) => {
+            if (x.id == id){
+                fav = true;
+            } 
+    })
+    try{
+            await client.connect();
+            let found = await client.db(MONGO_DB_NAME).collection('CachedMeals').findOne({"_id": id});
+            
+            if(found == null){
+                console.log('Spoonacular');    
+                fetch(`${SPOON_URL}recipes/${id}/information?apiKey=${API_KEY_SPOON}`).then(
+                    r => {return r.json();}
+                ).then( async r=> {
+                    let name = r.title;
+                    let image = r.image;
+                    let instructions = r.instructions;
+                    let extendedIngredients = r.extendedIngredients;
+                    const encode = encodeURI(name);
+                    let ingredients = "<ol>";
+                    extendedIngredients.forEach((item) => {
+                        ingredients+= `<li>${item.original}</li>`
+                    })
+                    ingredients+= "</ol>";
+                    
+                    const cachedMeal = {
+                        _id: id,
+                        title: name,
+                        instr: instructions,
+                        ingr: ingredients,
+                        img: image
+                    };
+                    
+                    await client.connect();
+                    let cache = await client.db(MONGO_DB_NAME).collection('CachedMeals').insertOne(cachedMeal);
+                    console.log(`Application entry created with id ${cache.insertedId}`);    
+                    await client.close();
+                    return res.render('customRecipe',{userURI: userURI, user: req.session.user, id:id, 
+                        recipeName:name, recipeEncode:encode, image:image, instructions:instructions, 
+                        ingredients:ingredients ,fav:fav} );  
+                })
+            } else {
+                console.log('pinged db');
+                const id = found._id;
+                const name = found.title;
+                const ingredients = found.ingr;
+                const instructions = found.instr;
+                const image = found.img;
+                const encode = encodeURI(name);
+                return res.render('customRecipe',{userURI: userURI, user: req.session.user, id:id, recipeName:name, 
+                    recipeEncode:encode, image:image, instructions:instructions, 
+                    ingredients:ingredients ,fav:fav} );  
+            }
+    } catch (e){
+        console.log(e)
+    } finally{
+        await client.close();
+    } 
+    
+    
+});
+
+app.post('/addFavoriteRecipe/:id.:name', async (req,res) => {
+    if(req.session.user == null){
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
+    } 
+    let {id, name} = req.params;
+    // console.log();
+    // console.log(id);
+    // console.log(name);
+    let added = true;
+    try {
+        await client.connect();
+        const query = {_id: req.session.userId };
+        let newFav = {$push: {'foodProfile.favorites': {id:id, name:name}}};
+        let removeFav = {$pull: {'foodProfile.favorites': {id:id, name:name}}};
+        // r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,newFav);
+        r = await client.db(MONGO_DB_NAME).collection('guests').findOne(query);
+        if (r){
+            // console.log(r.foodProfile.favorites);
+            let find = false;
+            r.foodProfile.favorites.forEach((x) => {
+                if (x.id == id){
+                    find = true;
+                } 
+            })
+            if(find){
+                r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,removeFav);
+                req.session.foodFavorites = req.session.foodFavorites.filter((x) => {return x.id != id});                
+                added = false;
+            } else {
+                r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,newFav);
+                req.session.foodFavorites.push({id:id, name:name});
+            }
+        }
+        // console.log(`Application entry created with id ${r.id}`);
+    } catch (e){
+        console.log(e)
+    } finally{
+        await client.close();
+    }
+
+    return res.json({isFavorited: added})
+})
+
 app.get('/drinkRecipes',async (req,res) =>{
 
     // Redundancy Check to see if use "exists"
     if(req.session.user == null){
-        req.session.user = 'guest';
-        req.session.favorites = [];
-        req.session.drinkInventory = [];
-        req.session.save();
-        return res.render('error', {user: req.session.user});
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
     }
     let r;
     // Connect to DB and look up user 
@@ -275,22 +455,21 @@ app.get('/drinkRecipes',async (req,res) =>{
     }
     // Using the favorites from the user, look them up with an API Call and add them to a list to be dealt with later
     let promiseList = [];
-    req.session.favorites.forEach(r => {
+    req.session.drinkFavorites.forEach(r => {
         promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
     })
     Promise.all([...promiseList])
         .then(results => {
             let page = generatePage(results, req.session.drinkInventory);
-            return res.render('drinks', {user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
+            const userURI = encodeURI(req.session.user);
+            return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
     })    
 });
 app.post('/remove', async (req,res) =>{
     if(req.session.user == null){
-    req.session.user = 'guest';
-    req.session.favorites = [];        
-    req.session.drinkInventory = [];
-    req.session.save();
-    return res.render('error', {user: req.session.user});
+    req.newUser
+    const userURI = encodeURI(req.session.user);
+    return res.render('error', {userURI: userURI, user: req.session.user});
     }
     // Inventory Item to remove 
     let result = Object.setPrototypeOf(req.body, Object.prototype);
@@ -308,27 +487,26 @@ app.post('/remove', async (req,res) =>{
     }
     let temp = "";
     let promiseList = [];
-    req.session.favorites.forEach(r => {
+    req.session.drinkFavorites.forEach(r => {
         promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
     })
     Promise.all([...promiseList])
         .then(results => {
             let page = generatePage(results, req.session.drinkInventory);
-            return res.render('drinks', {user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
+            const userURI = encodeURI(req.session.user);
+            return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
     })    
 })
 app.post('/processFilters', (req,res)=>{
     if(req.session.user == null){
-        req.session.user = 'guest';
-        req.session.favorites = [];
-        req.session.drinkInventory = [];
-        req.session.save();
-        return res.render('error', {user: req.session.user});
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
     }
     // Favorite look ups
     let filter = "filter.php?c=";
     let promiseList = [];
-    req.session.favorites.forEach(r => {
+    req.session.drinkFavorites.forEach(r => {
         promiseList.push(fetch(`${COCKTAIL_DB}lookup.php?i=${r}`).then(t => t.json()));
     })
     // Category selected by the user
@@ -350,7 +528,8 @@ app.post('/processFilters', (req,res)=>{
             })
             
             let page = generatePage(results, req.session.drinkInventory, entries, category.category);
-            res.render('drinks', {user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
+            const userURI = encodeURI(req.session.user);
+            return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
         }
     )
 
@@ -358,11 +537,9 @@ app.post('/processFilters', (req,res)=>{
 })
 app.post('/processInventory', (req, res) => {
     if(req.session.user == null){
-        req.session.user = 'guest';
-        req.session.favorites = [];
-        req.session.drinkInventory = [];
-        req.session.save();
-        return res.render('error', {user: req.session.user});
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
     }
     // Favorite look ups
     let filter = "filter.php?i=";
@@ -372,13 +549,13 @@ app.post('/processInventory', (req, res) => {
         promiseList.push(fetch(`${COCKTAIL_DB}${filter}${i}`).then(r => r.json()));
         console.log(`${COCKTAIL_DB}${filter}${i}`);
     })
-    req.session.favorites.forEach(r => {
+    req.session.drinkFavorites.forEach(r => {
         promiseList.push(fetch(`${COCKTAIL_DB}lookup.php?i=${r}`).then(t => t.json()));
     })
     Promise.all([...promiseList]).then(
         results => {
             let favs = [];
-            for(let i =0 ; i<req.session.favorites.length;i++){
+            for(let i =0 ; i<req.session.drinkFavorites.length;i++){
                 favs.push(results.pop());
             }
             let entries ="";
@@ -396,18 +573,17 @@ app.post('/processInventory', (req, res) => {
                 })
             })
             let page = generatePage(favs, req.session.drinkInventory, entries=entries);
-            return  res.render('drinks', {user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
+            const userURI = encodeURI(req.session.user);
+            return  res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
         }
     )
 
 })
 app.post('/addDrink', async (req,res) => {
     if(req.session.user == null){
-        req.session.user = 'guest';
-        req.session.favorites = [];
-        req.session.drinkInventory = [];
-        req.session.save();
-        return res.render('error', {user: req.session.user});
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
     }
     let item = Object.setPrototypeOf(req.body, Object.prototype);
     try {
@@ -423,38 +599,27 @@ app.post('/addDrink', async (req,res) => {
         await client.close();
     }
     let promiseList = [];
-    req.session.favorites.forEach(r => {
+    req.session.drinkFavorites.forEach(r => {
         promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
     })
     Promise.all([...promiseList])
         .then(results => {
             let page = generatePage(results, req.session.drinkInventory);
-            res.render('drinks', {user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
+            const userURI = encodeURI(req.session.user);
+            return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
     })    
 })
 app.get('/error', (req,res)=>{
-    return res.render('error', {user: req.session.user});
+    const userURI = encodeURI(req.session.user);
+    return res.render('error', {userURI: userURI, user: req.session.user});
 })
 app.get('/drinks/:id', async (req,res) =>{
     if(req.session.user == null){
-        req.session.user = 'guest';
-        req.session.favorites = [];
-        req.session.drinkInventory = [];
-        req.session.save();
-    return res.render('error', {user: req.session.user});
+        req.newUser
+    const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
     }
     let id = req.params;
-    try {
-        await client.connect();
-        let query = {_id: req.session.userId }
-        let recent = {$push: {'drinkProfile.recents': id.id}}
-        r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,recent);
-        console.log(`Application entry created with id ${r.id}`);
-    } catch (e){
-        console.log(e)
-    } finally{
-        await client.close();
-    }
     fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id.id}`)
     .then( r => {
             if (r.ok){
@@ -516,24 +681,23 @@ app.get('/drinks/:id', async (req,res) =>{
         // let ls = instr.split(".");
         // console.log(instr);
         let fav = false;        
-        if(req.session.favorites.includes(id.id)){
+        if(req.session.drinkFavorites.includes(id.id)){
             fav = true;
         }
-        return res.render('customDrink',{user: req.session.user, id:id.id, drinkName: name, image:img, instructions:instrList, ingredients:ingList ,fav:fav} );  
+        const userURI = encodeURI(req.session.user);
+        return res.render('customDrink',{userURI: userURI, user: req.session.user, id:id.id, drinkName: name, image:img, instructions:instrList, ingredients:ingList ,fav:fav} );  
     }).catch(e => {
         console.log(e);
     })
 })
 app.get('/profile/:id', (req,res) => {
     if(req.session.user == null){
-        req.session.user = 'guest';
-        req.session.favorites = [];
-        req.session.drinkInventory = [];
-        req.session.save();
-        return res.render('error', {user: req.session.user});
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
     }
     let promiseList = [];
-    req.session.favorites.forEach(r => {
+    req.session.drinkFavorites.forEach(r => {
         promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
     })
     Promise.all([...promiseList])
@@ -544,19 +708,20 @@ app.get('/profile/:id', (req,res) => {
                 console.log(d);
                 favs += `<div>${d.strDrink} <a class="fa fa-star checked" id="star" onclick=toggle(${d.idDrink})></a></div>`
             })
-            return res.render('profile', {user: req.session.user, favorites:favs})
-            res.render('drinks', {user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
+            const userURI = encodeURI(req.session.user);
+            return res.render('profile', {userURI: userURI, user: req.session.user, favorites:favs})
+            // const userURI = encodeURI(req.session.user);
+            // res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
     })   
     
-    // return res.render('underConstruction', {user: req.session.user});
+    const userURI = encodeURI(req.session.user);
+    // return res.render('underConstruction', {userURI: userURI, user: req.session.user});
 })
 app.post('/removeDrinkItems/:items', async (req,res)=> {
     if(req.session.user == null){
-        req.session.user = 'guest';
-        req.session.favorites = [];
-        req.session.drinkInventory = [];
-        req.session.save();
-        return res.render('error', {user: req.session.user});
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
     }
     let {items} = req.params;
     let list = JSON.parse(items);
@@ -583,11 +748,9 @@ app.post('/removeDrinkItems/:items', async (req,res)=> {
 })
 app.post('/addDrinkItem/:item', async (req,res)=> {
     if(req.session.user == null){
-        req.session.user = 'guest';
-        req.session.favorites = [];
-        req.session.drinkInventory = [];
-        req.session.save();
-        return res.render('error', {user: req.session.user});
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
     }
     let {item} = req.params;
     if (!req.session.drinkInventory.includes(item)){
@@ -624,12 +787,10 @@ app.post('/addDrinkItem/:item', async (req,res)=> {
 })
 app.post('/addFavoriteDrink/:id', async (req,res) => {
     if(req.session.user == null){
-        req.session.user = 'guest';
-        req.session.favorites = [];
-        req.session.drinkInventory = [];
-        req.session.save();
-        return res.render('error', {user: req.session.user});
-    }
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
+    } 
     let {id} = req.params;
     // console.log();
     let added = true;
@@ -643,11 +804,11 @@ app.post('/addFavoriteDrink/:id', async (req,res) => {
         if (r){
             if(r.drinkProfile.favorites.includes(id)){
                 r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,removeFav);
-                req.session.favorites = req.session.favorites.filter((x) => {return x != id});                
+                req.session.drinkFavorites = req.session.drinkFavorites.filter((x) => {return x != id});                
                 added = false;
             } else {
                 r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,newFav);
-                req.session.favorites.push(id);
+                req.session.drinkFavorites.push(id);
 
                 
             }
@@ -663,11 +824,9 @@ app.post('/addFavoriteDrink/:id', async (req,res) => {
 })
 app.post('/changeName/:name', async (req, res) => {
     if(req.session.user == null){
-        req.session.user = 'guest';
-        req.session.favorites = [];
-        req.session.drinkInventory = [];
-        req.session.save();
-        return res.render('error', {user: req.session.user});
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
     }
     let id = req.params['name'];
     console.log(id);
@@ -690,10 +849,11 @@ app.post('/changeName/:name', async (req, res) => {
 })
 app.get('/logout', (req,res)=>{
     req.session.user='guest';
-    req.session.favorites = [];
+    req.session.drinkFavorites = [];
     req.session.drinkInventory = [];
     req.session.save();
-    return res.render('home',{user: req.session.user});
+    const userURI = encodeURI(req.session.user);
+    return res.render('home',{userURI: userURI, user: req.session.user});
 })
 app.listen(port);
 console.log(`Listening on Port ${port}`);
