@@ -50,9 +50,45 @@ let categories = {
     }
   ]
 };
+const CUISINES = [
+    "None",
+    "Asian",
+    "American",
+    "British",
+    "Cajun",
+    "Carribbean",
+    "Chinese",
+    "European",
+    "German",
+    "Indian",
+    "Japanese",
+    "Jewish",
+    "Korean"
+];
+const ALLERGIES = [
+    "Dairy",
+    "Egg",
+    "Gluten",
+    "Grain",
+    "Seafood",
+    "Sesame",
+    "Shellfish",
+    "Soy",
+    "Sulfite",
+    "Tree Nut",
+    "Wheat"
+]
 const COCK_CAT = categories.drinks.map(x => x.strCategory);
+const COMMON_INGR = path.join(__dirname, 'top-1k-ingredients.csv');
 
-// FINAL TODO: ADd more filters for the search. Should be multi ingredient and inventory search. 
+fs.readFile(COMMON_INGR, 'utf-8', (err, data) => {
+    if (err) {
+        console.error(err);
+        return;
+    }
+    // console.log(data)
+})
+
 
 const uri = `mongodb+srv://${MONGO_DB_USER}:${MONGO_DB_PW}@cluster0.ivirx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -63,7 +99,7 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
-function generatePage(favorites, userInv, entries="", cat=""){
+function generateDrinkPage(favorites, userInv, entries="", cat=""){
     let options = "";
     COCK_CAT.forEach(e => {
         if (e == cat){
@@ -91,6 +127,100 @@ function generatePage(favorites, userInv, entries="", cat=""){
         userFavorites: favs,
         userInventory: inventory
     }
+}
+function generateMealPage(favorites, searchParams ){
+    let favs = "";
+    favorites.forEach((meal) => {
+        favs+= `<tr><td>${meal.name}</td><td><a href="/meals/${meal.id}">More Info</a></td></tr>`;
+    })
+    let categories = "";
+    if(searchParams.category == "") {
+        CUISINES.forEach((x) => {
+            if(x == "None"){
+                categories += `<option value ="${x}" selected>${x}</option>`;
+            } else {
+                categories += `<option value ="${x}">${x}</option>`;
+            }
+        });
+    } else {
+        CUISINES.forEach((x) => {
+            if(x == searchParams.category){
+                categories += `<option value ="${x}" selected>${x}</option>`;
+            } else {
+                categories += `<option value ="${x}">${x}</option>`;
+            }
+        });
+    }
+    let calories = "";
+    if(searchParams.cal == ""){
+        calories += `<label for="maxCal">Max Calories</label>
+                    <input class="bg-gray-700" type="number" name="maxCal" min="50" max = '800'>`
+    } else {
+        calories += `<label for="maxCal">Max Calories</label>
+                    <input class="bg-gray-700" type="number" value="${searchParams.cal}" name="maxCal" min="50" max = '800'>`
+    }
+    let servings = "";
+    if (searchParams.serv == ""){
+        servings += `<label for="maxSer">Max Servings</label>
+                <input class="bg-gray-700" type="number" name="maxSer" min="1" max = '8'>`
+    } else {
+        servings += `<label for="maxSer">Max Servings</label>
+                <input class="bg-gray-700" type="number" value="${searchParams.serv}" name="maxSer" min="1" max = '8'>`
+    }
+    let sugar = "";
+    if(searchParams.suga == ""){
+        sugar += `<label for="maxSug">Max Sugar</label>
+                <input class="bg-gray-700" type="number" name="maxSug" min="1" max = '100'>`
+    } else {
+        sugar += `<label for="maxSug">Max Sugar</label>
+                <input class="bg-gray-700" value="${searchParams.suga}" type="number" name="maxSug" min="1" max = '100'>`
+    }
+    let allergies = "";
+    if (searchParams.allg == ""){
+        ALLERGIES.forEach((x) => {
+            allergies += `<div class="flex justify-evenly">
+                            <label  for="${x}">${x}</label>
+                            <input class="absolute right-5"  type="checkbox" name="allergies" value="${x}">
+                        </div>`
+        })
+    } else {
+        if(Array.isArray(searchParams.allg)){
+            ALLERGIES.forEach((x) => {
+                if(searchParams.allg.includes(x)){
+                    allergies += `<div class="flex justify-evenly">
+                            <label  for="${x}">${x}</label>
+                            <input class="absolute right-5"  type="checkbox" name="allergies" value="${x}" checked>
+                        </div>`
+                } else {
+                    allergies += `<div class="flex justify-evenly">
+                            <label  for="${x}">${x}</label>
+                            <input class="absolute right-5"  type="checkbox" name="allergies" value="${x}">
+                        </div>`
+                }
+            })
+        } else {
+            ALLERGIES.forEach((x) => {
+                if(searchParams.allg == x){
+                    allergies += `<div class="flex justify-evenly">
+                            <label  for="${x}">${x}</label>
+                            <input class="absolute right-5"  type="checkbox" name="allergies" value="${x}" checked>
+                        </div>`
+                } else {
+                    allergies += `<div class="flex justify-evenly">
+                            <label  for="${x}">${x}</label>
+                            <input class="absolute right-5"  type="checkbox" name="allergies" value="${x}">
+                        </div>`
+                }
+            })
+        }
+        
+    }
+    let resp = {
+            favs : favs, cat: categories, cals: calories,
+            servs: servings, sugar: sugar, allg: allergies
+        };
+    
+    return resp;
 }
 async function run() {
   try {
@@ -159,6 +289,13 @@ const newUser = async function(req, res, next){
             req.session.foodInventory = app.foodProfile.inventory;
             req.session.userId = r.insertedId;
             req.session.lastMeal = null;
+            req.session.searchParams = {
+                category: "",
+                cal: "",
+                serv: "",
+                suga: "",
+                allg: ""
+            };
             req.session.save();
         }
     } catch (e){
@@ -168,31 +305,7 @@ const newUser = async function(req, res, next){
     }  
     next();
 };
-
-// const cacheMeal = async function (req, res, next){
-//     console.log("In the cachE");
-//     console.log(req.session.lastMeal);
-//     if(req.session.lastMeal != null){
-//         try{
-//             const meal  =  req.session.lastMeal;
-//             await client.connect();
-//             let db = await client.db(MONGO_DB_NAME).collection('CachedMeals'); 
-//             let found = db.findOne({"_id": meal._id});
-//             if(found == null){
-//                 let r = db.insertOne(meal);
-//                 console.log(`Application entry created with id ${r.insertedId}`);
-//             }
-//         } catch (e){
-//             console.log(e)
-//         } finally{
-//             await client.close();
-//         } 
-//     }
-//     req.session.lastMeal = null;
-//     next();
-// }
 app.use(newUser);
-// app.use(cacheMeal);
 /* Site pages */
 app.get('//', (req,res) =>{
     req.newUser
@@ -268,8 +381,10 @@ app.get('/foodRecipes', async (req,res) => {
     req.session.foodFavorites.forEach((meal) => {
         favorites+= `<tr><td>${meal.name}</td><td><a href="/meals/${meal.id}">More Info</a></td></tr>`;
     })
-    return res.render('food', {userURI: userURI, user: req.session.user, entries:"", categories:"", favorites: favorites, inventory: "", cnt: req.session.foodInventory.length});
-
+    let page = generateMealPage(req.session.foodFavorites, req.session.searchParams);
+    return res.render('food', {userURI: userURI, user: req.session.user, entries:'', categories:page.cat, 
+        favorites: page.favs, calories: page.cals, servings: page.servs, sugar:page.sugar, allergies: page.allg,
+        inventory: "", cnt: req.session.foodInventory.length});
     // return res.render('underConstruction', {userURI: userURI, user: req.session.user});
 });
 app.post('/processMealFilter', (req,res) =>{
@@ -292,17 +407,14 @@ app.post('/processMealFilter', (req,res) =>{
     if(maxSug != ""){
         query = query.concat(`&maxSugar=${maxSug}`)
     } 
-    if(allergies != "None"){
+    if(allergies != undefined){
         if (Array.isArray(allergies)){
             query = query.concat(`&intolerances=${allergies.join(",")}`);
         } else {
             query = query.concat(`&intolerances=${allergies}`);
         }
     }
-    let favorites = "";
-    req.session.foodFavorites.forEach((meal) => {
-        favorites+= `<tr><td>${meal.name}</td><td><a href="/meals/${meal.id}">More Info</a></td></tr>`;
-    })
+
     fetch(`https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY_SPOON}${query}&number=50`).then(
         r => {
            return r.json();
@@ -314,12 +426,23 @@ app.post('/processMealFilter', (req,res) =>{
                 entries += `<tr><td>${meal.title}</td> <td><a href="/meals/${meal.id}">Info Link</a></td></tr>`;        
             })
             const userURI = encodeURI(req.session.user);
-            
-            return res.render('food', {userURI: userURI, user: req.session.user, entries:entries, categories:"", favorites: favorites, inventory: "", cnt: req.session.foodInventory.length});
+            searchParams = {
+                category: category,
+                cal: maxCal,
+                serv: maxSer,
+                suga: maxSug,
+                allg: allergies == undefined ? "" : allergies
+            };
+            req.session.searchParams = searchParams;
+            let page = generateMealPage(req.session.foodFavorites, searchParams);
+            return res.render('food', {userURI: userURI, user: req.session.user, entries:entries, categories:page.cat, 
+                favorites: page.favs, calories: page.cals, servings: page.servs, sugar:page.sugar, allergies: page.allg,
+                inventory: "", cnt: req.session.foodInventory.length});
         })
         // console.log(req.body);
         // console.log(query);
 })
+
 app.get('/meals/:id',  async (req,res) => {
     if(req.session.user == null){
         req.newUser
@@ -460,7 +583,7 @@ app.get('/drinkRecipes',async (req,res) =>{
     })
     Promise.all([...promiseList])
         .then(results => {
-            let page = generatePage(results, req.session.drinkInventory);
+            let page = generateDrinkPage(results, req.session.drinkInventory);
             const userURI = encodeURI(req.session.user);
             return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
     })    
@@ -492,7 +615,7 @@ app.post('/remove', async (req,res) =>{
     })
     Promise.all([...promiseList])
         .then(results => {
-            let page = generatePage(results, req.session.drinkInventory);
+            let page = generateDrinkPage(results, req.session.drinkInventory);
             const userURI = encodeURI(req.session.user);
             return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
     })    
@@ -527,7 +650,7 @@ app.post('/processFilters', (req,res)=>{
                 entries += `<tr><td>${r.strDrink}</td> <td><a href="/drinks/${r.idDrink}">Info Link</a></td></tr>`;
             })
             
-            let page = generatePage(results, req.session.drinkInventory, entries, category.category);
+            let page = generateDrinkPage(results, req.session.drinkInventory, entries, category.category);
             const userURI = encodeURI(req.session.user);
             return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
         }
@@ -572,7 +695,7 @@ app.post('/processInventory', (req, res) => {
                     entries += `<tr><td>${e.strDrink}</td> <td><a href="/drinks/${e.idDrink}">Info Link</a></td></tr>`;
                 })
             })
-            let page = generatePage(favs, req.session.drinkInventory, entries=entries);
+            let page = generateDrinkPage(favs, req.session.drinkInventory, entries=entries);
             const userURI = encodeURI(req.session.user);
             return  res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
         }
@@ -604,7 +727,7 @@ app.post('/addDrink', async (req,res) => {
     })
     Promise.all([...promiseList])
         .then(results => {
-            let page = generatePage(results, req.session.drinkInventory);
+            let page = generateDrinkPage(results, req.session.drinkInventory);
             const userURI = encodeURI(req.session.user);
             return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
     })    

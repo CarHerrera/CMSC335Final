@@ -5,6 +5,7 @@
         <title>Drink Curator</title>
         <link rel="stylesheet" type="text/css" href="/tailwind.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <script src="/editInventory.js"></script>
     </head>
     <body class="bg-black md:w-screen h-screen">
         <%- include ('nav'); -%>
@@ -38,16 +39,16 @@
                                 <div class='h-full border shadow-xl relative bg-slate-800'>
                                 <div id="inventoryManager" class="flex flex-col w-full h-full" method="post">
                                     <!-- Have the submit button change from enter to remove when clicking boxes or entering info -->
-                                     <div id="drinkInventoryBox" class="p-5 max-h-4/5 overflow-y-auto">
+                                     <div id="foodInventory" class="p-5 max-h-4/5 overflow-y-auto">
                                         <%- inventory %>
                                      </div>
-                                    <button id="backBtn" class="hidden absolute top-3 right-3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(2,<%-cnt-%>) type="button">Back</button>
-                                    <input class="hidden absolute bottom-0 w-9/10 p-5 bg-white text-black h-1/5" id="myInput" type="text" name="ingredient" placeholder="Enter a drink like chocolate!">
-                                    <button id="submitItem"class="hidden bottom-0 right-0 w-1/10 absolute h-1/5 bg-blue-800 inset-ring-3 shadow-xl text-white p-3" type ='button' onclick=selectAction(4,<%-cnt-%>)> Submit </button>
-                                    <button id="addInven" class="absolute bottom-4 left-1/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(0,<%-cnt-%>) type="button">Add</button>
-                                    <button id="rmInven" class="absolute bottom-4 left-2/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(1,<%-cnt-%>) type="button">Remove</button>
-                                    <button id="backBtn2" class="hidden absolute bottom-4 left-1/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(3,<%-cnt-%>) type="button">Back</button>
-                                    <button id="rmInven2" class="hidden absolute bottom-4 left-2/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectAction(5,<%-cnt-%>) type="button">Remove</button>
+                                    <button id="backBtn" class="hidden absolute top-3 right-3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectFoodAction(2,<%-cnt-%>) type="button">Back</button>
+                                    <input class="hidden absolute bottom-0 w-9/10 p-5 bg-white text-black h-1/5" id="myInput" type="text" name="ingredient" placeholder="Enter a recipe item like apricots or andouille sausage">
+                                    <button id="submitItem"class="hidden bottom-0 right-0 w-1/10 absolute h-1/5 bg-blue-800 inset-ring-3 shadow-xl text-white p-3" type ='button' onclick=selectFoodAction(4,<%-cnt-%>)> Submit </button>
+                                    <button id="addInven" class="absolute bottom-4 left-1/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectFoodAction(0,<%-cnt-%>) type="button">Add</button>
+                                    <button id="rmInven" class="absolute bottom-4 left-2/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectFoodAction(1,<%-cnt-%>) type="button">Remove</button>
+                                    <button id="backBtn2" class="hidden absolute bottom-4 left-1/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectFoodAction(3,<%-cnt-%>) type="button">Back</button>
+                                    <button id="rmInven2" class="hidden absolute bottom-4 left-2/3 bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" onclick=selectFoodAction(5,<%-cnt-%>) type="button">Remove</button>
                                 </div>
                                 <div id="drinkAlert" class="hidden absolute -bottom-10 w-full p-3 bg-red-600">
                                     <span class="absolute right-3 text-xl" onclick="this.parentElement.style.display='none';">&times;X</span>
@@ -62,46 +63,22 @@
                             <fieldset>
                                 <label for="category">Choose a Category</label> 
                                 <select class="bg-gray-700" name ='category' required>
-                                    <option value="None" selected>None</option>
-                                    <option value="Asian">Asian</option>
-                                    <option value="American">American</option>
-                                    <option value="British">British</option>
-                                    <option value="Cajun">Cajun</option>
-                                    <option value="Carribbean">Carribbean</option>
-                                    <option value="Chinese">Chinese</option>
-                                    <option value="European">European</option>
-                                    <option value="German">German</option>
-                                    <option value="Indian">Indian</option>
-                                    <option value="Japanese">Japanese</option>
-                                    <option value="Jewish">Jewish</option>
-                                    <option value="Korean">Korean</option> 
+                                    <%- categories %>
                                 </select>
-                                <label for="maxCal">Max Calories</label>
-                                <input class="bg-gray-700" type="number" name="maxCal" min="50" max = '800'>
-                                <label for="maxSer">Max Servings</label>
-                                <input class="bg-gray-700" type="number" name="maxSer" min="1" max = '8'>
-                                <label for="maxSug">Max Sugar</label>
-                                <input class="bg-gray-700" type="number" name="maxSug" min="1" max = '100'>
+                                <%- calories %>
+                                <%- servings %>
+                                <%- sugar %>
                                 <label class="mb-2.5" for="allergies">Allergies: </label>
-                                <select size="2" class="absolute w-50 bg-gray-700 border rounded-base px-3 py-2.5 shadow-xs" name="allergies" multiple>
-                                    <option value="None" selected>None</option>
-                                    <option value="Dairy">Dairy</option>
-                                    <option value="Egg">Egg</option>
-                                    <option value="Gluten">Gluten</option>
-                                    <option value="Grain">Grain</option>
-                                    <option value="Peanut">Peanut</option>
-                                    <option value="Seafood">Seafood</option>
-                                    <option value="Sesame">Sesame</option>
-                                    <option value="Shellfish">Shellfish</option>
-                                    <option value="Soy">Soy</option>
-                                    <option value="Sulfite">Sulfite</option>
-                                    <option value="Tree_Nut">Tree Nut</option>
-                                    <option value="Wheat">Wheat</option>
-                                </select>
+                                <div  class="inline-block relative flex flex-col w-50  justify-center">
+                                    <button id="showAllergies" type="button" onclick="showAllergens()" class="alg w-full rounded-full inset-ring-1 bg-gray-700">No Allergies Selected</button>
+                                    <div id="allergyList" class="hidden absolute w-full left-0 bg-gray-700">
+                                        <%- allergies %>
+                                    </div>
+                                </div>
                             </fieldset>
                             <br>
                             
-                            <input type="submit" value="submit">
+                            <input class="bg-blue-800 rounded-full inset-ring-3 shadow-xl text-white p-3" type="submit" value="submit">
                         </form>
                         <br>
                         <table class="w-full bg-slate-800 border border-white">
@@ -128,4 +105,56 @@
 
     </body>
     <script type="text/javascript" src="/favoriteToggle.js"></script>
+    <script>
+        let checkBoxDivs = document.getElementById("allergyList").children;
+        let checkBoxes = [];
+        let count = 0;
+        // Can Alter this to Make the allergies sync from server to client
+        for(let i = 0; i< checkBoxDivs.length; i++){
+            checkBoxes.push(checkBoxDivs[i].children[1]);
+            if (checkBoxDivs[i].children[1].checked){
+                count++;
+            }
+        }
+        checkBoxes.forEach((checkBox) => {
+            checkBox.addEventListener("change", (e) => {
+                // console.log(e.target);
+                if(e.target.checked){
+                    count++;
+                } else {
+                    count--;
+                }
+                if (count <= 0 ) {
+                    document.getElementById("showAllergies").innerHTML = `No Allergies Selected`;
+                } else {
+                    document.getElementById("showAllergies").innerHTML = `${count} Allergies Selected`;
+                }
+                
+            })
+        })
+        function showAllergens(){
+            document.getElementById("allergyList").classList.toggle("hidden");
+        }
+        document.getElementById("allergyList").addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
+        window.onclick = function(event) {
+            if (!event.target.matches('.alg')) {
+                let dropdowns = document.getElementById("allergyList").classList;
+                if(!dropdowns.contains("hidden")){
+                    document.getElementById("allergyList").classList.toggle("hidden");
+                }
+                
+            }
+        }
+
+        window.onload = () => {
+            console.log(count);
+            if (count <= 0 ) {
+                document.getElementById("showAllergies").innerHTML = `No Allergies Selected`;
+            } else {
+                document.getElementById("showAllergies").innerHTML = `${count} Allergies Selected`;
+            }
+        }
+    </script>
 </html>

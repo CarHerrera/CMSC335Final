@@ -9,15 +9,6 @@
     --width: 100vmax;
     --color-gray-700: oklch(37.3% 0.034 259.733);
 }
-
-
-
-
-
-
-
-
-
  th, td{
     border: 2px solid;
     border-collapse: collapse;
@@ -29,9 +20,6 @@
 .checked{
     color:orange;
 }
-
-
-
 @layer components{
     .autocomplete-items {
         position: absolute;
@@ -76,37 +64,4 @@ body {
   /*the container must be positioned relative:*/
   position: relative;
   display: inline-block;
-}
-
-input[type=submit] {
-  background-color: DodgerBlue;
-  color: #fff;
-}
-
-
-/* GUEST */
-
-
-
-
-
-.guestPop{
-    position:absolute;
-    top: 25%;
-    width: var(--width);
-    background-color: var(--rose);
-    height: 50%;
-}
-.guestHeader{
-    text-align: center;
-}
-.guestLink{
-    background-color:var(--blue);
-    color:white;
-    border-radius: 20px;
-    margin-left: 30vw;
-    height: 6vh;
-    padding: 10px;
-    overflow:hidden;
-    justify-content: left;
 }

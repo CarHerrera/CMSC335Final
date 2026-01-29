@@ -95,3 +95,99 @@ async function selectAction(action, cnt){
 
     
 }
+
+async function selectFoodAction(action, cnt){
+    // Remove Action
+    if(action === 1 ){
+        // Remove the default add and remove buttons
+        document.getElementById("addInven").style.visibility = 'hidden';
+        document.getElementById("rmInven").style.visibility = 'hidden';
+        // Display Checkboxes
+        Array.from(document.getElementsByClassName("hiddenCheckBox")).forEach(box => 
+            box.setAttribute('class', 'drinkInvCBox')
+        );
+        // Show the new buttons
+        document.getElementById("backBtn2").classList.toggle('hidden');
+        document.getElementById("rmInven2").classList.toggle('hidden');
+    // Add action
+    } else if (action === 0){
+        // Remove the default add and remove buttons
+        document.getElementById("addInven").style.visibility = 'hidden';
+        document.getElementById("rmInven").style.visibility = 'hidden';
+        // Showcase the input bar and submit button
+        document.getElementById("myInput").classList.toggle('hidden');
+        document.getElementById("backBtn").classList.toggle('hidden');
+        document.getElementById("submitItem").classList.toggle('hidden');
+    // Back to default from Add 
+    } else if (action === 2){
+        document.getElementById("addInven").style.visibility = 'visible';
+        document.getElementById("rmInven").style.visibility = 'visible';
+        document.getElementById("myInput").classList.toggle('hidden');
+        document.getElementById("backBtn").classList.toggle('hidden');
+        document.getElementById("submitItem").classList.toggle('hidden');
+        // Back to default from remove
+    } else if (action == 3) {
+        Array.from(document.getElementsByClassName("drinkInvCBox")).forEach(box => 
+            box.setAttribute('class', 'hiddenCheckBox')
+        );
+        document.getElementById("addInven").style.visibility = 'visible';
+        document.getElementById("rmInven").style.visibility = 'visible';
+        document.getElementById("backBtn2").classList.toggle('hidden');
+        document.getElementById("rmInven2").classList.toggle('hidden');
+    // This is adding items when the add button is clicked
+    } else if (action == 4){
+        let x = document.getElementById("myInput").value;
+        if (ingr.includes(x)) {
+            const resp = await fetch(`/addDrinkItem/${x}`, {
+                method: "POST",
+                headers: {
+                    'Content-Type' : 'application/json'
+                }
+            })
+            const data = await resp.json();
+            if(data.success == 200){
+                const node = document.getElementById("drinkInventoryBox");
+                node.innerHTML = data.data;    
+            } else if (data.success == -1){
+                document.getElementById("drinkAlert").classList.toggle('hidden');
+                document.getElementById("drinkAlert").innerHTML = `<span class="absolute right-3" onclick="this.parentElement.style.display='none';">&times;</span>
+                                    ${x} was already found in your inventory. No duplicates are allowed.`;
+            }
+        } else {
+            // Checks to see if the error alert is visible already. if it is vis alreay then do nothing 
+            if(!document.getElementById("drinkAlert").classList.contains('hidden')){
+                
+            } else {
+                document.getElementById("drinkAlert").classList.toggle('hidden');
+                document.getElementById("drinkAlert").innerHTML = `<span class="absolute right-3" onclick="this.parentElement.style.display='none';">&times;</span>
+                                    ${x} was not found or is not a valid item. Please enter something else `;
+            }
+            
+            // setTimeout(()=>document.getElementById("drinkAlert").classList.toggle('hidden'), 7000)
+        }
+        
+    // Removing items from the inventory
+    } else if (action == 5){
+        let inventory = document.querySelectorAll('.drinkInvCBox');
+        let toRemove = [];
+        inventory.forEach((item) => {
+            if(item.checked){
+                console.log(item);
+                toRemove.push(item.name)
+            }
+        })
+        const json = JSON.stringify(toRemove);
+        const resp = await fetch(`/removeDrinkItems/${json}`, {
+                method: "POST",
+                headers: {
+                    'Content-Type' : 'application/json'
+            }
+        })
+        const data = await resp.json();
+        const node = document.getElementById("drinkInventoryBox");
+        node.innerHTML = data;
+        selectAction(3,cnt-toRemove.length);
+    }
+
+    
+}
