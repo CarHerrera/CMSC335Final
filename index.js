@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const { parse } = require("csv-parse");
+const config = require('./config.js');
 const controller = new AbortController();
 const { signal } = controller;
 const app = express();
@@ -81,7 +82,7 @@ const ALLERGIES = [
     "Tree Nut",
     "Wheat"
 ]
-
+const router = express.Router();
 const QUOTA_LB = 90;
 const COCK_CAT = categories.drinks.map(x => x.strCategory);
 const COMMON_INGR = path.join(__dirname, 'top-1k-ingredients.csv');
@@ -293,10 +294,10 @@ let port = 3100;
 app.set("views", path.resolve(__dirname, "templates")); 
 app.set("view engine", "ejs");
 
-app.use(bodyParser.urlencoded({extended:false})); 
-app.use(cookieParser());
-app.use(express.static(path.resolve(__dirname, "static")));
-app.use(
+router.use(bodyParser.urlencoded({extended:false})); 
+router.use(cookieParser());
+router.use(express.static(path.resolve(__dirname, "static")));
+router.use(
     session({
         resave:true, saveUninitialized: false, secret: process.env.SECRET, sameSite: true,
     })
@@ -354,16 +355,16 @@ const newUser = async function(req, res, next){
     }  
     next();
 };
-app.use(newUser);
+router.use(newUser);
 /* Site pages */
-app.get('//', (req,res) =>{
+router.get('/', (req,res) =>{
     req.newUser
     
     const userURI = encodeURI(req.session.user);
     return res.render('home',{userURI: userURI, user: req.session.user});
 })
 
-app.get('/account', (req,res) => {
+router.get('/account', (req,res) => {
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -373,7 +374,7 @@ app.get('/account', (req,res) => {
     return res.render('account', {userURI: userURI, user:req.session.user, error:""});
 })
 
-app.post('/login', async (req,res) => {
+router.post('/login', async (req,res) => {
     let {username, pword} = req.body;
     let r;
     try {
@@ -397,7 +398,7 @@ app.post('/login', async (req,res) => {
         return res.render('account',{userURI: userURI, user:req.session.user, error:"Password/Username was not correct"});
     }
 })
-app.post('/signup', async (req,res) => {
+router.post('/signup', async (req,res) => {
     let {username, pword, age, allergies} = req.body;
     // const userURI = encodeURI(req.session.user);
     let app = {_id:username, userURI: userURI, user: username, pword:pword, age:age, allergies: allergies, 
@@ -418,10 +419,10 @@ app.post('/signup', async (req,res) => {
     const userURI = encodeURI(req.session.user);
     return res.render('home', {userURI: userURI, user: username, entries:""});
 })
-app.post('/commonIngredients', (req,res) => {
+router.post('/commonIngredients', (req,res) => {
     return res.json({ingredients: meal_ingr})
 })
-app.get('/foodRecipes', async (req,res) => {
+router.get('/foodRecipes', async (req,res) => {
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -434,7 +435,7 @@ app.get('/foodRecipes', async (req,res) => {
         inventory: page.inventory, cnt: req.session.foodInventory.length, quotaError: false, EmptyInv: false});
     // return res.render('underConstruction', {userURI: userURI, user: req.session.user});
 });
-app.post('/processMealFilter', (req,res) =>{
+router.post('/processMealFilter', (req,res) =>{
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -510,7 +511,7 @@ app.post('/processMealFilter', (req,res) =>{
         })
 })
 
-app.get('/meals/:id',  async (req,res) => {
+router.get('/meals/:id',  async (req,res) => {
     if(req.session.user == null){
         req.newUser
         return res.render('error', {userURI: userURI, user: req.session.user});
@@ -607,7 +608,7 @@ app.get('/meals/:id',  async (req,res) => {
     
 });
 
-app.post('/addFavoriteRecipe/:id.:name', async (req,res) => {
+router.post('/addFavoriteRecipe/:id.:name', async (req,res) => {
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -652,7 +653,7 @@ app.post('/addFavoriteRecipe/:id.:name', async (req,res) => {
     return res.json({isFavorited: added})
 })
 
-app.post('/addRecipeItem/:item', async (req, res) => {
+router.post('/addRecipeItem/:item', async (req, res) => {
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -691,7 +692,7 @@ app.post('/addRecipeItem/:item', async (req, res) => {
     });
 })
 
-app.post('/removeRecipeItem/:items', async (req,res) => {
+router.post('/removeRecipeItem/:items', async (req,res) => {
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -722,7 +723,7 @@ app.post('/removeRecipeItem/:items', async (req,res) => {
     return res.json(inventory);
 });
 
-app.post('/processFoodInventory', (req, res) => {
+router.post('/processFoodInventory', (req, res) => {
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -791,7 +792,7 @@ app.post('/processFoodInventory', (req, res) => {
         })
 });
 
-app.get('/drinkRecipes',async (req,res) =>{
+router.get('/drinkRecipes',async (req,res) =>{
 
     // Redundancy Check to see if use "exists"
     if(req.session.user == null){
@@ -823,7 +824,7 @@ app.get('/drinkRecipes',async (req,res) =>{
                 cnt: req.session.drinkInventory.length, EmptyInv: false});
     })    
 });
-app.post('/remove', async (req,res) =>{
+router.post('/remove', async (req,res) =>{
     if(req.session.user == null){
     req.newUser
     const userURI = encodeURI(req.session.user);
@@ -857,7 +858,7 @@ app.post('/remove', async (req,res) =>{
                  cnt: req.session.drinkInventory.length, EmptyInv: false});
     })    
 })
-app.post('/processFilters', (req,res)=>{
+router.post('/processFilters', (req,res)=>{
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -897,7 +898,7 @@ app.post('/processFilters', (req,res)=>{
 
 
 })
-app.post('/processInventory', (req, res) => {
+router.post('/processInventory', (req, res) => {
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -957,11 +958,11 @@ app.post('/processInventory', (req, res) => {
 })
 
 
-app.get('/error', (req,res)=>{
+router.get('/error', (req,res)=>{
     const userURI = encodeURI(req.session.user);
     return res.render('error', {userURI: userURI, user: req.session.user});
 })
-app.get('/drinks/:id', async (req,res) =>{
+router.get('/drinks/:id', async (req,res) =>{
     if(req.session.user == null){
         req.newUser
     const userURI = encodeURI(req.session.user);
@@ -1038,7 +1039,7 @@ app.get('/drinks/:id', async (req,res) =>{
         console.log(e);
     })
 })
-app.get('/profile/:id', (req,res) => {
+router.get('/profile/:id', (req,res) => {
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -1066,7 +1067,7 @@ app.get('/profile/:id', (req,res) => {
     const userURI = encodeURI(req.session.user);
     // return res.render('underConstruction', {userURI: userURI, user: req.session.user});
 })
-app.post('/removeDrinkItems/:items', async (req,res)=> {
+router.post('/removeDrinkItems/:items', async (req,res)=> {
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -1095,7 +1096,7 @@ app.post('/removeDrinkItems/:items', async (req,res)=> {
     })
     return res.json(inventory);
 })
-app.post('/addDrinkItem/:item', async (req,res)=> {
+router.post('/addDrinkItem/:item', async (req,res)=> {
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -1134,7 +1135,7 @@ app.post('/addDrinkItem/:item', async (req,res)=> {
         data: inventory
     });
 })
-app.post('/addFavoriteDrink/:id', async (req,res) => {
+router.post('/addFavoriteDrink/:id', async (req,res) => {
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -1171,7 +1172,7 @@ app.post('/addFavoriteDrink/:id', async (req,res) => {
 
     return res.json({isFavorited: added})
 })
-app.post('/changeName/:name', async (req, res) => {
+router.post('/changeName/:name', async (req, res) => {
     if(req.session.user == null){
         req.newUser
         const userURI = encodeURI(req.session.user);
@@ -1196,7 +1197,7 @@ app.post('/changeName/:name', async (req, res) => {
 
     return res.json({nameAdded: true})
 })
-app.get('/logout', (req,res)=>{
+router.get('/logout', (req,res)=>{
     req.session.user='guest';
     req.session.drinkFavorites = [];
     req.session.drinkInventory = [];
@@ -1204,5 +1205,7 @@ app.get('/logout', (req,res)=>{
     const userURI = encodeURI(req.session.user);
     return res.render('home',{userURI: userURI, user: req.session.user});
 })
+
+app.use(config.baseUrl, router)
 app.listen(port);
 console.log(`Listening on Port ${port}`);
