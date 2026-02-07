@@ -47,11 +47,11 @@
     .hiddenCheckBox{
         visibility: hidden;
     }
-    .drinkInvCBox{
+    .checkBox{
         padding-left: 1rem;
         
     }
-    .drinkItem{
+    .inventoryItem{
         font-size: larger;
     }
 }

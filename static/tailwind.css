@@ -7,6 +7,7 @@
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
+    --color-red-400: oklch(70.4% 0.191 22.216);
     --color-red-600: oklch(57.7% 0.245 27.325);
     --color-emerald-950: oklch(26.2% 0.051 172.552);
     --color-teal-600: oklch(60% 0.118 184.704);
@@ -262,9 +263,6 @@
   .my-5 {
     margin-block: calc(var(--spacing) * 5);
   }
-  .my-10 {
-    margin-block: calc(var(--spacing) * 10);
-  }
   .mt-10 {
     margin-top: calc(var(--spacing) * 10);
   }
@@ -476,6 +474,9 @@
   .text-black {
     color: var(--color-black);
   }
+  .text-red-400 {
+    color: var(--color-red-400);
+  }
   .text-white {
     color: var(--color-white);
   }
@@ -553,10 +554,10 @@ th, td {
   .hiddenCheckBox {
     visibility: hidden;
   }
-  .drinkInvCBox {
+  .checkBox {
     padding-left: 1rem;
   }
-  .drinkItem {
+  .inventoryItem {
     font-size: larger;
   }
 }

@@ -12,7 +12,11 @@
         <%- include ('nav'); -%>
         <% if (user != 'guest') {%>
            <main class="h-screen flex flex-col">
-                <div class="h-1/7 flex-none w-screen bg-black"></div>
+                <div class="h-1/7 flex-none w-screen bg-black">
+                    <% if(EmptyInv == true) { %>
+                        <p class="text-red-400">Please add items to your inventory before running this query.</p>
+                    <% } %>
+                </div>
                 <div class="bg-emerald-950 h-4/5 flex flex-col text-white">
                     <div class="max-h-1/2 h-full flex flex-row">
                         <div class ='w-1/2 flex flex-col m-5'>

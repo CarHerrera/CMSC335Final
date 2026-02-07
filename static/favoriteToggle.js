@@ -1,7 +1,7 @@
-async function toggle(x){
-    // x.classList.toggle('checked');
-    console.log(x);
-    const resp = await fetch(`/addFavoriteDrink/${x}`, {
+async function toggle(id){
+    // id.classList.toggle('checked');
+    console.log(id);
+    const resp = await fetch(`/addFavoriteDrink/${id}`, {
         method: "POST",
         headers: {
             'Content-Type' : 'application/json'
@@ -10,14 +10,14 @@ async function toggle(x){
     const data = await resp.json();
     console.log(data);
     if(data.isFavorited){
-        document.getElementById("star").className = "fa fa-star checked";
+        document.getElementById(id).className = "fa fa-star checked";
     } else {
-        document.getElementById("star").className = "fa fa-star";
+        document.getElementById(id).className = "fa fa-star";
     }
 }
 
 async function toggleRecipe(id, name){    
-    
+    console.log(name);
     const resp = await fetch(`/addFavoriteRecipe/${id}.${decodeURI(name)}`, {
         method: "POST",
         headers: {
@@ -25,12 +25,9 @@ async function toggleRecipe(id, name){
         }
     })
     const data = await resp.json();
-    console.log(id);
-    console.log(name);
-    console.log(data);
     if(data.isFavorited){
-        document.getElementById("star").className = "fa fa-star checked";
+        document.getElementById(id).className = "fa fa-star checked";
     } else {
-        document.getElementById("star").className = "fa fa-star";
+        document.getElementById(id).className = "fa fa-star";
     }
 }

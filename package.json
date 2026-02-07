@@ -17,6 +17,7 @@
     "@tailwindcss/cli": "^4.1.14",
     "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.7",
+    "csv-parse": "^6.1.0",
     "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
     "express": "^4.21.1",

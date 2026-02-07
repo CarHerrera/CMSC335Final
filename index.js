@@ -4,6 +4,9 @@ const path = require("path");
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const { parse } = require("csv-parse");
+const controller = new AbortController();
+const { signal } = controller;
 const app = express();
 const fs = require('fs');
 require("dotenv").config({path: path.resolve(__dirname, '.env')});
@@ -78,16 +81,46 @@ const ALLERGIES = [
     "Tree Nut",
     "Wheat"
 ]
+
+const QUOTA_LB = 90;
 const COCK_CAT = categories.drinks.map(x => x.strCategory);
 const COMMON_INGR = path.join(__dirname, 'top-1k-ingredients.csv');
+let meal_ingr = [];
+async function readCSVAsObjects() {
+  const parser = fs
+    .createReadStream(COMMON_INGR)
+    .pipe(
+      parse({
+        skip_empty_lines: true,
+        trim: true,
+        delimeter: ';',
+      })
+    );
 
-fs.readFile(COMMON_INGR, 'utf-8', (err, data) => {
-    if (err) {
-        console.error(err);
-        return;
+  try {
+    for await (const row of parser) {
+      // Process each row as it arrives, preventing memory accumulation
+        // meal_ingr.push(row);
+        // console.log(typeof row)
+        // console.log(row[0])
+        let split = row[0].split(";");
+        // console.log(split);
+        meal_ingr.push({
+            item: split[0],
+            id: split[1]
+        });
     }
-    // console.log(data)
-})
+    console.log("Finished reading CSV file");
+  } catch (error) {
+    console.error("Error:", error.message);
+    throw error;
+  }
+}
+
+readCSVAsObjects().catch((error) => {
+  console.error("Failed to read CSV:", error.message);
+  process.exit(1);
+});
 
 
 const uri = `mongodb+srv://${MONGO_DB_USER}:${MONGO_DB_PW}@cluster0.ivirx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -115,8 +148,8 @@ function generateDrinkPage(favorites, userInv, entries="", cat=""){
     })
     let inventory = "";
     userInv.forEach(ing => {
-        inventory+=`<div class="drinkInvBox">
-                        <label class="drinkItem" for="${ing}">${ing}</label>
+        inventory+=`<div class="InvBox">
+                        <label class="inventoryItem" for="${ing}">${ing}</label>
                         <input type="checkbox" name="${ing}" class="hiddenCheckBox">
                     </div><br/>`
     })
@@ -128,12 +161,16 @@ function generateDrinkPage(favorites, userInv, entries="", cat=""){
         userInventory: inventory
     }
 }
-function generateMealPage(favorites, searchParams ){
+function generateMealPage(favorites, searchParams, inv){
     let favs = "";
     favorites.forEach((meal) => {
         favs+= `<tr><td>${meal.name}</td><td><a href="/meals/${meal.id}">More Info</a></td></tr>`;
     })
-    let categories = "";
+    let categories = 
+    `<div>
+        <label for="category">Choose a Category</label>
+        <select class="bg-gray-700" name ='category' required>
+    `;
     if(searchParams.category == "") {
         CUISINES.forEach((x) => {
             if(x == "None"){
@@ -151,29 +188,33 @@ function generateMealPage(favorites, searchParams ){
             }
         });
     }
+    categories+= "</select></div>";
     let calories = "";
     if(searchParams.cal == ""){
-        calories += `<label for="maxCal">Max Calories</label>
-                    <input class="bg-gray-700" type="number" name="maxCal" min="50" max = '800'>`
+        calories += `<div><label for="maxCal">Max Calories</label>
+                    <input class="bg-gray-700" type="number" name="maxCal" min="50" max = '800'>
+                    </div>`
     } else {
-        calories += `<label for="maxCal">Max Calories</label>
-                    <input class="bg-gray-700" type="number" value="${searchParams.cal}" name="maxCal" min="50" max = '800'>`
+        calories += `<div><label for="maxCal">Max Calories</label>
+                    <input class="bg-gray-700" type="number" value="${searchParams.cal}" name="maxCal" min="50" max = '800'>
+                    </div>`
     }
     let servings = "";
     if (searchParams.serv == ""){
-        servings += `<label for="maxSer">Max Servings</label>
-                <input class="bg-gray-700" type="number" name="maxSer" min="1" max = '8'>`
+        servings += `<div><label for="maxSer">Max Servings</label>
+                <input class="bg-gray-700" type="number" name="maxSer" min="1" max = '8'>
+                </div>`
     } else {
-        servings += `<label for="maxSer">Max Servings</label>
-                <input class="bg-gray-700" type="number" value="${searchParams.serv}" name="maxSer" min="1" max = '8'>`
+        servings += `<div><label for="maxSer">Max Servings</label>
+                <input class="bg-gray-700" type="number" value="${searchParams.serv}" name="maxSer" min="1" max = '8'></div>`
     }
     let sugar = "";
     if(searchParams.suga == ""){
-        sugar += `<label for="maxSug">Max Sugar</label>
-                <input class="bg-gray-700" type="number" name="maxSug" min="1" max = '100'>`
+        sugar += `<div><label for="maxSug">Max Sugar</label>
+                <input class="bg-gray-700" type="number" name="maxSug" min="1" max = '100'></div>`
     } else {
-        sugar += `<label for="maxSug">Max Sugar</label>
-                <input class="bg-gray-700" value="${searchParams.suga}" type="number" name="maxSug" min="1" max = '100'>`
+        sugar += `<div><label for="maxSug">Max Sugar</label>
+                <input class="bg-gray-700" value="${searchParams.suga}" type="number" name="maxSug" min="1" max = '100'></div>`
     }
     let allergies = "";
     if (searchParams.allg == ""){
@@ -215,9 +256,17 @@ function generateMealPage(favorites, searchParams ){
         }
         
     }
+    let inventory = "";
+    inv.forEach(ing => {
+        inventory+=`<div class="InvBox">
+                        <label class="inventoryItem" for="${ing}">${ing}</label>
+                        <input type="checkbox" name="${ing}" class="hiddenCheckBox">
+                    </div><br/>`
+    })
     let resp = {
             favs : favs, cat: categories, cals: calories,
-            servs: servings, sugar: sugar, allg: allergies
+            servs: servings, sugar: sugar, allg: allergies,
+            inventory: inventory
         };
     
     return resp;
@@ -369,7 +418,9 @@ app.post('/signup', async (req,res) => {
     const userURI = encodeURI(req.session.user);
     return res.render('home', {userURI: userURI, user: username, entries:""});
 })
-
+app.post('/commonIngredients', (req,res) => {
+    return res.json({ingredients: meal_ingr})
+})
 app.get('/foodRecipes', async (req,res) => {
     if(req.session.user == null){
         req.newUser
@@ -377,14 +428,10 @@ app.get('/foodRecipes', async (req,res) => {
         return res.render('error', {userURI: userURI, user: req.session.user});
     }
     const userURI = encodeURI(req.session.user);
-    let favorites = "";
-    req.session.foodFavorites.forEach((meal) => {
-        favorites+= `<tr><td>${meal.name}</td><td><a href="/meals/${meal.id}">More Info</a></td></tr>`;
-    })
-    let page = generateMealPage(req.session.foodFavorites, req.session.searchParams);
+    let page = generateMealPage(req.session.foodFavorites, req.session.searchParams, req.session.foodInventory);
     return res.render('food', {userURI: userURI, user: req.session.user, entries:'', categories:page.cat, 
         favorites: page.favs, calories: page.cals, servings: page.servs, sugar:page.sugar, allergies: page.allg,
-        inventory: "", cnt: req.session.foodInventory.length});
+        inventory: page.inventory, cnt: req.session.foodInventory.length, quotaError: false, EmptyInv: false});
     // return res.render('underConstruction', {userURI: userURI, user: req.session.user});
 });
 app.post('/processMealFilter', (req,res) =>{
@@ -414,18 +461,29 @@ app.post('/processMealFilter', (req,res) =>{
             query = query.concat(`&intolerances=${allergies}`);
         }
     }
-
-    fetch(`https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY_SPOON}${query}&number=50`).then(
+    const userURI = encodeURI(req.session.user);
+    fetch(`${SPOON_URL}recipes/complexSearch?apiKey=${API_KEY_SPOON}${query}&number=50`, {
+        method:"GET",
+        headers: {
+            'Content-Type': 'application/json',
+            'X-API-Quota-Left': "X"
+        },
+        signal: signal
+    }).then(
         r => {
+            const quota = r.headers.get(`X-API-Quota-Left`);
+            if(quota < QUOTA_LB) {
+                controller.abort();
+            }
            return r.json();
         }).then(r =>{
-            // console.log(r);
+            
             let meals = r.results;
             let entries = "";
             meals.forEach(meal => {
-                entries += `<tr><td>${meal.title}</td> <td><a href="/meals/${meal.id}">Info Link</a></td></tr>`;        
+                entries += `<tr><td>${meal.title}</td> <td><a href="/meals/${meal.id}">Recipe Link</a></td></tr>`;        
             })
-            const userURI = encodeURI(req.session.user);
+
             searchParams = {
                 category: category,
                 cal: maxCal,
@@ -433,14 +491,23 @@ app.post('/processMealFilter', (req,res) =>{
                 suga: maxSug,
                 allg: allergies == undefined ? "" : allergies
             };
-            req.session.searchParams = searchParams;
-            let page = generateMealPage(req.session.foodFavorites, searchParams);
+            let page = generateMealPage(req.session.foodFavorites, searchParams, req.session.foodInventory);
             return res.render('food', {userURI: userURI, user: req.session.user, entries:entries, categories:page.cat, 
                 favorites: page.favs, calories: page.cals, servings: page.servs, sugar:page.sugar, allergies: page.allg,
-                inventory: "", cnt: req.session.foodInventory.length});
+                inventory: page.inventory, cnt: req.session.foodInventory.length, quotaError: false, EmptyInv: false});
+        }).catch(err => {
+            console.log(err);
+            if(err.name == 'AbortError'){
+                console.log('Fetch Cancelled');
+                let page = generateMealPage(req.session.foodFavorites, req.session.searchParams, req.session.foodInventory);
+                return res.render('food', {userURI: userURI, user: req.session.user, entries:'', categories:page.cat, 
+                favorites: page.favs, calories: page.cals, servings: page.servs, sugar:page.sugar, allergies: page.allg,
+                inventory: page.inventory, cnt: req.session.foodInventory.length, quotaError: true, EmptyInv: false});
+            } else{
+                console.log('Something terribly wrong has occurred');
+                return res.render('error')
+            }
         })
-        // console.log(req.body);
-        // console.log(query);
 })
 
 app.get('/meals/:id',  async (req,res) => {
@@ -462,8 +529,23 @@ app.get('/meals/:id',  async (req,res) => {
             
             if(found == null){
                 console.log('Spoonacular');    
-                fetch(`${SPOON_URL}recipes/${id}/information?apiKey=${API_KEY_SPOON}`).then(
-                    r => {return r.json();}
+                fetch(`${SPOON_URL}recipes/${id}/information?apiKey=${API_KEY_SPOON}`, 
+                    {
+                        method:"GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-Quota-Left': "X"
+                        },
+                        signal: signal
+                    }
+                ).then(
+                    r => {
+                        const quota = r.headers.get(`X-API-Quota-Left`);
+                        if(quota < QUOTA_LB) {
+                            controller.abort();
+                        }
+                        return r.json();
+                    }
                 ).then( async r=> {
                     let name = r.title;
                     let image = r.image;
@@ -490,7 +572,19 @@ app.get('/meals/:id',  async (req,res) => {
                     await client.close();
                     return res.render('customRecipe',{userURI: userURI, user: req.session.user, id:id, 
                         recipeName:name, recipeEncode:encode, image:image, instructions:instructions, 
-                        ingredients:ingredients ,fav:fav} );  
+                        ingredients:ingredients ,fav:fav, quotaError: false} );  
+                }).catch(err => {
+                    console.log(err);
+                    if(err.name == 'AbortError'){
+                        console.log('Fetch Cancelled');
+                        let page = generateMealPage(req.session.foodFavorites, req.session.searchParams, req.session.foodInventory);
+                        return res.render('food', {userURI: userURI, user: req.session.user, entries:'', categories:page.cat, 
+                        favorites: page.favs, calories: page.cals, servings: page.servs, sugar:page.sugar, allergies: page.allg,
+                        inventory: page.inventory, cnt: req.session.foodInventory.length, quotaError: true, EmptyInv: false});
+                    } else{
+                        console.log('Something terribly wrong has occurred');
+                        return res.render('error')
+                    }
                 })
             } else {
                 console.log('pinged db');
@@ -502,7 +596,7 @@ app.get('/meals/:id',  async (req,res) => {
                 const encode = encodeURI(name);
                 return res.render('customRecipe',{userURI: userURI, user: req.session.user, id:id, recipeName:name, 
                     recipeEncode:encode, image:image, instructions:instructions, 
-                    ingredients:ingredients ,fav:fav} );  
+                    ingredients:ingredients ,fav:fav, quotaError:false} );  
             }
     } catch (e){
         console.log(e)
@@ -558,6 +652,145 @@ app.post('/addFavoriteRecipe/:id.:name', async (req,res) => {
     return res.json({isFavorited: added})
 })
 
+app.post('/addRecipeItem/:item', async (req, res) => {
+    if(req.session.user == null){
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
+    }
+    let {item} = req.params;
+    if (!req.session.foodInventory.includes(item)){
+        try {
+            await client.connect();
+            let query = {_id: req.session.userId}
+            let add = {$push: {'foodProfile.inventory': item}}
+            r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,add);
+            req.session.foodInventory.push(item);
+            console.log(`Application entry created with id ${r.id}`);
+        } catch (e){
+            console.log(e)
+        } finally{
+            await client.close();
+        }   
+    } else {
+        return res.json({
+            success : -1,
+            data: ""
+        });
+    }
+    let inventory = "";
+    req.session.foodInventory.forEach(ing => {
+        inventory+=`<div class="InvBox">
+                        <label class="inventoryItem" for="${ing}">${ing}</label>
+                        <input type="checkbox" name="${ing}" class="hiddenCheckBox">
+                    </div><br/>`
+    })
+    return res.json({
+        success : 200,
+        data: inventory
+    });
+})
+
+app.post('/removeRecipeItem/:items', async (req,res) => {
+    if(req.session.user == null){
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
+    }
+    let {items} = req.params;
+    let list = JSON.parse(items);
+    console.log(list);
+    try {
+        await client.connect();
+        let query = {_id: req.session.userId }
+        let add = {$pull: {'foodProfile.inventory': {$in :list}}}
+        r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,add);
+        req.session.foodInventory = req.session.foodInventory.filter(x => !list.includes(x));
+        console.log(`Removed items ${list} from ${r}`);
+    } catch (e){
+        console.log(e)
+    } finally{
+        await client.close();
+    }
+    let inventory = "";
+    req.session.foodInventory.forEach(ing => {
+        inventory+=`<div class="InvBox">
+                        <label class="inventoryItem" for="${ing}">${ing}</label>
+                        <input type="checkbox" name="${ing}" class="hiddenCheckBox">
+                    </div><br/>`
+    })
+    return res.json(inventory);
+});
+
+app.post('/processFoodInventory', (req, res) => {
+    if(req.session.user == null){
+        req.newUser
+        const userURI = encodeURI(req.session.user);
+        return res.render('error', {userURI: userURI, user: req.session.user});
+    }
+    
+    let str = req.session.foodInventory.join(",");
+    const userURI = encodeURI(req.session.user);
+    let searchParams = {
+            category: "",
+            cal: "",
+            serv: "",
+            suga: "",
+            allg: ""
+        };
+    // https://api.spoonacular.com/recipes/findByIngredients?ingredients=apples,+flour,+sugar&number=2
+    if(req.session.foodInventory == 0) {
+        let page = generateMealPage(req.session.foodFavorites, searchParams, req.session.foodInventory);
+        return res.render('food', {userURI: userURI, user: req.session.user, entries:"", categories:page.cat, 
+            favorites: page.favs, calories: page.cals, servings: page.servs, sugar:page.sugar, allergies: page.allg,
+            inventory: page.inventory, cnt: req.session.foodInventory.length, quotaError: false, EmptyInv: true});
+    }
+    fetch(`${SPOON_URL}recipes/findByIngredients?ingredients=${str}&apiKey=${API_KEY_SPOON}&number=50`,
+        {
+        method:"GET",
+        headers: {
+            'Content-Type': 'application/json',
+            'X-API-Quota-Left': "X"
+        },
+        signal: signal
+    }
+    ).then(
+            r => {
+                const quota = r.headers.get(`X-API-Quota-Left`);
+                if(quota < QUOTA_LB) {
+                    controller.abort();
+                }
+                return r.json();
+            }
+    ).then( r => {
+        console.log(r);
+        let entries = "";
+        r.forEach(item => {
+            entries+= `<tr><td>${item.title}</td><td><a href="/meals/${item.id}">Recipe Link</a></td></tr>`
+        })
+        
+        let page = generateMealPage(req.session.foodFavorites, searchParams, req.session.foodInventory);
+        return res.render('food', {userURI: userURI, user: req.session.user, entries:entries, categories:page.cat, 
+            favorites: page.favs, calories: page.cals, servings: page.servs, sugar:page.sugar, allergies: page.allg,
+            inventory: page.inventory, cnt: req.session.foodInventory.length, quotaError: false, EmptyInv:false});
+        // return res.render('customRecipe',{userURI: userURI, user: req.session.user, id:id, 
+        //     recipeName:name, recipeEncode:encode, image:image, instructions:instructions, 
+        //     ingredients:ingredients ,fav:fav} );  
+    }).catch(err => {
+            console.log(err);
+            if(err.name == 'AbortError'){
+                console.log('Fetch Cancelled');
+                let page = generateMealPage(req.session.foodFavorites, req.session.searchParams, req.session.foodInventory);
+                return res.render('food', {userURI: userURI, user: req.session.user, entries:'', categories:page.cat, 
+                favorites: page.favs, calories: page.cals, servings: page.servs, sugar:page.sugar, allergies: page.allg,
+                inventory: page.inventory, cnt: req.session.foodInventory.length, quotaError: true, EmptyInv: false});
+            } else{
+                console.log('Something terribly wrong has occurred');
+                return res.render('error')
+            }
+        })
+});
+
 app.get('/drinkRecipes',async (req,res) =>{
 
     // Redundancy Check to see if use "exists"
@@ -585,7 +818,9 @@ app.get('/drinkRecipes',async (req,res) =>{
         .then(results => {
             let page = generateDrinkPage(results, req.session.drinkInventory);
             const userURI = encodeURI(req.session.user);
-            return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
+            return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, 
+                categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, 
+                cnt: req.session.drinkInventory.length, EmptyInv: false});
     })    
 });
 app.post('/remove', async (req,res) =>{
@@ -617,7 +852,9 @@ app.post('/remove', async (req,res) =>{
         .then(results => {
             let page = generateDrinkPage(results, req.session.drinkInventory);
             const userURI = encodeURI(req.session.user);
-            return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
+            return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, 
+                categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory,
+                 cnt: req.session.drinkInventory.length, EmptyInv: false});
     })    
 })
 app.post('/processFilters', (req,res)=>{
@@ -652,7 +889,9 @@ app.post('/processFilters', (req,res)=>{
             
             let page = generateDrinkPage(results, req.session.drinkInventory, entries, category.category);
             const userURI = encodeURI(req.session.user);
-            return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
+            return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, 
+                categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, 
+                cnt: req.session.drinkInventory.length, EmptyInv: false});
         }
     )
 
@@ -664,74 +903,60 @@ app.post('/processInventory', (req, res) => {
         const userURI = encodeURI(req.session.user);
         return res.render('error', {userURI: userURI, user: req.session.user});
     }
-    // Favorite look ups
-    let filter = "filter.php?i=";
+    const userURI = encodeURI(req.session.user);
     let promiseList = [];
-    req.session.drinkInventory.forEach( i => {
-        i = i.replace(/ /g, "_");
-        promiseList.push(fetch(`${COCKTAIL_DB}${filter}${i}`).then(r => r.json()));
-        console.log(`${COCKTAIL_DB}${filter}${i}`);
-    })
     req.session.drinkFavorites.forEach(r => {
         promiseList.push(fetch(`${COCKTAIL_DB}lookup.php?i=${r}`).then(t => t.json()));
     })
-    Promise.all([...promiseList]).then(
-        results => {
-            let favs = [];
-            for(let i =0 ; i<req.session.drinkFavorites.length;i++){
-                favs.push(results.pop());
-            }
-            let entries ="";
-            i = 0;
-            results.forEach(r =>{
-                let drinkResults = r.drinks;
-                drinkResults.forEach(e =>{
-                    // if (i %2 == 0){
-                    //     entries += `<tr class="bg-teal-600"><td>${e.strDrink}</td> <td><a href="/drinks/${e.idDrink}">Info Link</a></td></tr>`;
-                    // } else {
-                    //     entries += `<tr class="bg-violet-600"><td>${e.strDrink}</td> <td><a href="/drinks/${e.idDrink}">Info Link</a></td></tr>`;
-                    // }
-                    // i++;
-                    entries += `<tr><td>${e.strDrink}</td> <td><a href="/drinks/${e.idDrink}">Info Link</a></td></tr>`;
+    if (req.session.drinkInventory == 0) {
+        
+        Promise.all([...promiseList]).then(
+            results => {
+                let page = generateDrinkPage(results, req.session.drinkInventory);
+                return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, 
+                    categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory,
+                    cnt: req.session.drinkInventory.length, EmptyInv: true});
+                }
+        )
+    } else {
+        // Favorite look ups
+        let filter = "filter.php?i=";
+        req.session.drinkInventory.forEach( i => {
+            i = i.replace(/ /g, "_");
+            promiseList.push(fetch(`${COCKTAIL_DB}${filter}${i}`).then(r => r.json()));
+            console.log(`${COCKTAIL_DB}${filter}${i}`);
+        })
+        Promise.all([...promiseList]).then(
+            results => {
+                let favs = [];
+                for(let i =0 ; i<req.session.drinkFavorites.length;i++){
+                    favs.push(results.pop());
+                }
+                let entries ="";
+                i = 0;
+                results.forEach(r =>{
+                    let drinkResults = r.drinks;
+                    drinkResults.forEach(e =>{
+                        // if (i %2 == 0){
+                        //     entries += `<tr class="bg-teal-600"><td>${e.strDrink}</td> <td><a href="/drinks/${e.idDrink}">Info Link</a></td></tr>`;
+                        // } else {
+                        //     entries += `<tr class="bg-violet-600"><td>${e.strDrink}</td> <td><a href="/drinks/${e.idDrink}">Info Link</a></td></tr>`;
+                        // }
+                        // i++;
+                        entries += `<tr><td>${e.strDrink}</td> <td><a href="/drinks/${e.idDrink}">Info Link</a></td></tr>`;
+                    })
                 })
-            })
-            let page = generateDrinkPage(favs, req.session.drinkInventory, entries=entries);
-            const userURI = encodeURI(req.session.user);
-            return  res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
-        }
-    )
+                let page = generateDrinkPage(favs, req.session.drinkInventory, entries=entries);
 
-})
-app.post('/addDrink', async (req,res) => {
-    if(req.session.user == null){
-        req.newUser
-        const userURI = encodeURI(req.session.user);
-        return res.render('error', {userURI: userURI, user: req.session.user});
+                return  res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table,
+                    categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, 
+                    cnt: req.session.drinkInventory.length, EmptyInv: false});
+            }
+        )
     }
-    let item = Object.setPrototypeOf(req.body, Object.prototype);
-    try {
-        await client.connect();
-        let query = {_id: req.session.userId }
-        let add = {$push: {'drinkProfile.inventory': item.ingredient}}
-        r = await client.db(MONGO_DB_NAME).collection('guests').updateOne(query,add);
-        req.session.drinkInventory.push(item.ingredient);
-        console.log(`Application entry created with id ${r.id}`);
-    } catch (e){
-        console.log(e)
-    } finally{
-        await client.close();
-    }
-    let promiseList = [];
-    req.session.drinkFavorites.forEach(r => {
-        promiseList.push(fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${r}`).then(t => t.json()));
-    })
-    Promise.all([...promiseList])
-        .then(results => {
-            let page = generateDrinkPage(results, req.session.drinkInventory);
-            const userURI = encodeURI(req.session.user);
-            return res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
-    })    
 })
+
+
 app.get('/error', (req,res)=>{
     const userURI = encodeURI(req.session.user);
     return res.render('error', {userURI: userURI, user: req.session.user});
@@ -767,7 +992,7 @@ app.get('/drinks/:id', async (req,res) =>{
             }
             arr[index] = tmp;
         })
-        // console.log();
+        
         let img = drink.strDrinkThumb;
         let name = drink.strDrink;
         let ing = [drink.strIngredient1,drink.strIngredient2,drink.strIngredient3,
@@ -828,13 +1053,14 @@ app.get('/profile/:id', (req,res) => {
             let favs = "";
             results.forEach(drink => {
                 let d = drink.drinks[0];
-                console.log(d);
-                favs += `<div>${d.strDrink} <a class="fa fa-star checked" id="star" onclick=toggle(${d.idDrink})></a></div>`
+                favs += `<div>${d.strDrink} <a class="fa fa-star checked" id=${d.idDrink} onclick=toggle(${d.idDrink})></a></div>`;
+            })
+
+            req.session.foodFavorites.forEach(meal =>{
+                favs += `<div>${meal.name} <a class="fa fa-star checked" id=${meal.id} onclick=toggleRecipe(${meal.id},"${encodeURI(meal.name)}")></a></div>`;
             })
             const userURI = encodeURI(req.session.user);
             return res.render('profile', {userURI: userURI, user: req.session.user, favorites:favs})
-            // const userURI = encodeURI(req.session.user);
-            // res.render('drinks', {userURI: userURI, user: req.session.user, entries:page.table, categories:page.categories, favorites: page.userFavorites, inventory: page.userInventory, cnt: req.session.drinkInventory.length});
     })   
     
     const userURI = encodeURI(req.session.user);
@@ -862,8 +1088,8 @@ app.post('/removeDrinkItems/:items', async (req,res)=> {
     }
     let inventory = "";
     req.session.drinkInventory.forEach(ing => {
-        inventory+=`<div class="drinkInvBox">
-                        <label class="drinkItem" for="${ing}">${ing}</label>
+        inventory+=`<div class="InvBox">
+                        <label class="inventoryItem" for="${ing}">${ing}</label>
                         <input type="checkbox" name="${ing}" class="hiddenCheckBox">
                     </div><br/>`
     })
@@ -898,8 +1124,8 @@ app.post('/addDrinkItem/:item', async (req,res)=> {
 
     let inventory = "";
     req.session.drinkInventory.forEach(ing => {
-        inventory+=`<div class="drinkInvBox">
-                        <label class="drinkItem" for="${ing}">${ing}</label>
+        inventory+=`<div class="InvBox">
+                        <label class="inventoryItem" for="${ing}">${ing}</label>
                         <input type="checkbox" name="${ing}" class="hiddenCheckBox">
                     </div><br/>`
     })
