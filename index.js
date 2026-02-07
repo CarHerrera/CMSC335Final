@@ -82,6 +82,7 @@ const ALLERGIES = [
     "Tree Nut",
     "Wheat"
 ]
+
 const router = express.Router();
 const QUOTA_LB = 90;
 const COCK_CAT = categories.drinks.map(x => x.strCategory);
@@ -145,7 +146,7 @@ function generateDrinkPage(favorites, userInv, entries="", cat=""){
     let favs = "";
     favorites.forEach(drink => {
         let drinks = drink.drinks[0];
-        favs += `<tr><td>${drinks.strDrink}</td><td><a href="/drinks/${drinks.idDrink}">More Info</a></td></tr>`
+        favs += `<tr><td>${drinks.strDrink}</td><td><a href="${config.baseUrl}drinks/${drinks.idDrink}">More Info</a></td></tr>`
     })
     let inventory = "";
     userInv.forEach(ing => {
@@ -165,7 +166,7 @@ function generateDrinkPage(favorites, userInv, entries="", cat=""){
 function generateMealPage(favorites, searchParams, inv){
     let favs = "";
     favorites.forEach((meal) => {
-        favs+= `<tr><td>${meal.name}</td><td><a href="/meals/${meal.id}">More Info</a></td></tr>`;
+        favs+= `<tr><td>${meal.name}</td><td><a href="${config.baseUrl}meals/${meal.id}">More Info</a></td></tr>`;
     })
     let categories = 
     `<div>
@@ -356,8 +357,12 @@ const newUser = async function(req, res, next){
     next();
 };
 router.use(newUser);
+router.use((req, res, next) => {
+    res.locals.base = config.baseUrl; 
+    next(); 
+});
 /* Site pages */
-router.get('/', (req,res) =>{
+router.get('//', (req,res) =>{
     req.newUser
     
     const userURI = encodeURI(req.session.user);
@@ -482,7 +487,7 @@ router.post('/processMealFilter', (req,res) =>{
             let meals = r.results;
             let entries = "";
             meals.forEach(meal => {
-                entries += `<tr><td>${meal.title}</td> <td><a href="/meals/${meal.id}">Recipe Link</a></td></tr>`;        
+                entries += `<tr><td>${meal.title}</td> <td><a href="${config.baseUrl}meals/${meal.id}">Recipe Link</a></td></tr>`;        
             })
 
             searchParams = {
@@ -767,7 +772,7 @@ router.post('/processFoodInventory', (req, res) => {
         console.log(r);
         let entries = "";
         r.forEach(item => {
-            entries+= `<tr><td>${item.title}</td><td><a href="/meals/${item.id}">Recipe Link</a></td></tr>`
+            entries+= `<tr><td>${item.title}</td><td><a href="${config.baseUrl}meals/${item.id}">Recipe Link</a></td></tr>`
         })
         
         let page = generateMealPage(req.session.foodFavorites, searchParams, req.session.foodInventory);
@@ -879,13 +884,7 @@ router.post('/processFilters', (req,res)=>{
             let entries ="";
             let i = 0;
             queryResults.forEach(r => {
-                // if (i %2 == 0){
-                //     entries += `<tr class="bg-teal-600"><td>${r.strDrink}</td> <td><a href="/drinks/${r.idDrink}">Info Link</a></td></tr>`;
-                // } else {
-                //     entries += `<tr class="bg-violet-600"><td>${r.strDrink}</td> <td><a href="/drinks/${r.idDrink}">Info Link</a></td></tr>`;
-                // }
-                // i++;
-                entries += `<tr><td>${r.strDrink}</td> <td><a href="/drinks/${r.idDrink}">Info Link</a></td></tr>`;
+                entries += `<tr><td>${r.strDrink}</td> <td><a href="${config.baseUrl}drinks/${r.idDrink}">Info Link</a></td></tr>`;
             })
             
             let page = generateDrinkPage(results, req.session.drinkInventory, entries, category.category);
@@ -938,13 +937,7 @@ router.post('/processInventory', (req, res) => {
                 results.forEach(r =>{
                     let drinkResults = r.drinks;
                     drinkResults.forEach(e =>{
-                        // if (i %2 == 0){
-                        //     entries += `<tr class="bg-teal-600"><td>${e.strDrink}</td> <td><a href="/drinks/${e.idDrink}">Info Link</a></td></tr>`;
-                        // } else {
-                        //     entries += `<tr class="bg-violet-600"><td>${e.strDrink}</td> <td><a href="/drinks/${e.idDrink}">Info Link</a></td></tr>`;
-                        // }
-                        // i++;
-                        entries += `<tr><td>${e.strDrink}</td> <td><a href="/drinks/${e.idDrink}">Info Link</a></td></tr>`;
+                        entries += `<tr><td>${e.strDrink}</td> <td><a href="${config.baseUrl}drinks/${e.idDrink}">Info Link</a></td></tr>`;
                     })
                 })
                 let page = generateDrinkPage(favs, req.session.drinkInventory, entries=entries);

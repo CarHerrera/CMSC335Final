@@ -1,11 +1,11 @@
 
 <div class="w-screen bg-emerald-950 flex flex-row drop-shadow-lg">
 
-        <a id ="userName" class="text-white float-left p-10" href="/"><%=user%> Recipe Hub! </a>
+        <a id ="userName" class="text-white float-left p-10" href="<%= base %>/"><%=user%> Recipe Hub! </a>
         <a class="flex-grow"></a>
-        <a class ='text-center text-white p-10 float-right' href="/drinkRecipes">Drinks</a> 
-        <a class ='text-center text-white p-10 float-right' href="/foodRecipes">Food Recipes</a>
-        <a id ="userProfile" class ='text-center text-white p-10 float-right' href="/profile/<%=userURI%>"><%=user%>'s Profile</a>
+        <a class ='text-center text-white p-10 float-right' href="<%= base %>/drinkRecipes">Drinks</a> 
+        <a class ='text-center text-white p-10 float-right' href="<%= base %>/foodRecipes">Food Recipes</a>
+        <a id ="userProfile" class ='text-center text-white p-10 float-right' href="<%= base %>/profile/<%=userURI%>"><%=user%>'s Profile</a>
         <!-- <a class ='text-center text-white p-10 float-right'href="logout">Logout</a> -->
 
 </div>
