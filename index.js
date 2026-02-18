@@ -304,6 +304,12 @@ router.use(
     })
 );
 
+// Pass baseUrl to all templates
+router.use((req, res, next) => {
+    res.locals.baseUrl = config.baseUrl;
+    next();
+});
+
 const newUser = async function(req, res, next){
    let app = {
         _id:"",

@@ -1,7 +1,7 @@
 async function toggle(id){
     // id.classList.toggle('checked');
     console.log(id);
-    const resp = await fetch(`/addFavoriteDrink/${id}`, {
+    const resp = await fetch(`${baseUrl}addFavoriteDrink/${id}`, {
         method: "POST",
         headers: {
             'Content-Type' : 'application/json'
@@ -18,7 +18,7 @@ async function toggle(id){
 
 async function toggleRecipe(id, name){    
     console.log(name);
-    const resp = await fetch(`/addFavoriteRecipe/${id}.${decodeURI(name)}`, {
+    const resp = await fetch(`${baseUrl}addFavoriteRecipe/${id}.${decodeURI(name)}`, {
         method: "POST",
         headers: {
             'Content-Type' : 'application/json'

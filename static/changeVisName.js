@@ -2,7 +2,7 @@ async function changeName() {
     let input = document.querySelector('input');
     const newname = input.value;
     console.log(newname);
-    const resp = await fetch(`/changeName/${newname}`, {
+    const resp = await fetch(`${baseUrl}changeName/${newname}`, {
         method: "POST",
         headers: {
             'Content-Type' : 'application/json'

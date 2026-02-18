@@ -3,7 +3,7 @@
     <head>
         <title>Drink Curator</title>
         <%- include('headers'); -%>
-        
+        <script src="<%= baseUrl %>editInventory.js"></script>
     </head>
     <body class="bg-black md:w-screen h-screen">
         <%- include ('nav'); -%>
@@ -111,5 +111,5 @@
         <%}%>
 
     </body>
-    <script src="/autoComplete.js"></script>
+    <script src="<%= baseUrl %>autoComplete.js"></script>
 </html>
